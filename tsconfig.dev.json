@@ -1,0 +1,8 @@
+{
+    "extends": "./tsconfig.prod.json",
+    "compilerOptions": {
+        "declaration": false,
+        "declarationDir": null,
+        "inlineSourceMap": true
+    }
+}
