@@ -1,4 +1,4 @@
-import { IAsyncOption, IAsyncResult, IOption, IResult } from '../abstraction'
+import { IAsyncOption, IAsyncResult, IOption, IResult, promisify } from '../abstraction'
 import { ValueNotProvidedError } from '../ValueNotProvidedError'
 import { AsyncMonadCallbacks, AsyncOptionImpl, AsyncResultImpl } from './async'
 
@@ -37,6 +37,9 @@ export class Some<T> implements IOption<T> {
     map<U>(mapper: (value: T) => U): IOption<U> {
         return new Some(mapper(this.value))
     }
+    assert(condition: (value: T) => boolean): IOption<T> {
+        return condition(this.value) ? this : NONE
+    }
     zip<U>(option: IOption<U>): IOption<[T, U]>
     zip<U>(factory: (value: T) => IOption<U>): IOption<[T, U]>
     zip<U>(firstArg: IOption<U> | ((value: T) => IOption<U>)): IOption<[T, U]> {
@@ -54,7 +57,7 @@ export class Some<T> implements IOption<T> {
         return new Success(this.value)
     }
     toAsync(): IAsyncOption<T> {
-        return new AsyncOptionImpl(Promise.resolve(this), ASYNC_MONAD_CALLBACKS)
+        return new AsyncOptionImpl(promisify(this), ASYNC_MONAD_CALLBACKS)
     }
 }
 export class None implements IOption<never> {
@@ -87,6 +90,9 @@ export class None implements IOption<never> {
     map(): this {
         return this
     }
+    assert(): this {
+        return this
+    }
     zip(): this {
         return this
     }
@@ -104,7 +110,7 @@ export class None implements IOption<never> {
     }
 }
 export const NONE = new None()
-export const ASYNC_NONE = new AsyncOptionImpl(Promise.resolve(NONE), ASYNC_MONAD_CALLBACKS)
+export const ASYNC_NONE = new AsyncOptionImpl(promisify(NONE), ASYNC_MONAD_CALLBACKS)
 
 export class Success<T> implements IResult<T, never> {
     get error(): never {
@@ -150,6 +156,14 @@ export class Success<T> implements IResult<T, never> {
     mapError(): this {
         return this
     }
+    assert<E>(condition: (value: T) => IOption<E>): IResult<T, E> {
+        return condition(this.value)
+            .toResult(() => this.value)
+            .swap()
+    }
+    assertError(): this {
+        return this
+    }
     zip<U>(result: IResult<U, never>): IResult<[T, U], never>
     zip<U>(factory: (value: T) => IResult<U, never>): IResult<[T, U], never>
     zip<U>(firstArg: IResult<U, never> | ((value: T) => IResult<U, never>)): IResult<[T, U], never> {
@@ -167,7 +181,7 @@ export class Success<T> implements IResult<T, never> {
         return new Some(this.value)
     }
     toAsync(): IAsyncResult<T, never> {
-        return new AsyncResultImpl(Promise.resolve(this), ASYNC_MONAD_CALLBACKS)
+        return new AsyncResultImpl<T, never>(promisify(this), ASYNC_MONAD_CALLBACKS)
     }
 }
 export class Failure<E> implements IResult<never, E> {
@@ -214,6 +228,13 @@ export class Failure<E> implements IResult<never, E> {
     mapError<U>(mapper: (error: E) => U): IResult<never, U> {
         return new Failure(mapper(this.error))
     }
+    assert(): this {
+        return this
+    }
+    assertError<T>(condition: (error: E) => IOption<T>): IResult<T, E> {
+        return condition(this.error)
+            .toResult(() => this.error)
+    }
     zip(): this {
         return this
     }
@@ -227,6 +248,6 @@ export class Failure<E> implements IResult<never, E> {
         return NONE
     }
     toAsync(): IAsyncResult<never, E> {
-        return new AsyncResultImpl(Promise.resolve(this), ASYNC_MONAD_CALLBACKS)
+        return new AsyncResultImpl<never, E>(promisify(this), ASYNC_MONAD_CALLBACKS)
     }
 }

@@ -40,7 +40,7 @@ describe('callAsync', () => {
     })
     it('async is promise', async () => {
         const expectedValue = 123
-        async = Promise.resolve(expectedValue)
+        async = promisify(expectedValue)
         const resultPromise = callAsync(async, callback)
         expect(isPromise(resultPromise)).toBe(true)
         const result = await resultPromise
@@ -56,7 +56,7 @@ describe('callAsync', () => {
 })
 describe('promisify', () => {
     it('async is promise', () => {
-        async = Promise.resolve(123)
+        async = promisify(123)
         const promisifiedAsync = promisify(async)
         expect(promisifiedAsync).toBe(async)
     })

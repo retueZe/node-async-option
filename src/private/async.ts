@@ -46,6 +46,9 @@ export class AsyncOptionImpl<T> implements IAsyncOption<T> {
     map<U>(mapper: (value: T) => Async<U>): IAsyncOption<U> {
         return this.bind(value => callAsync(mapper(value), this._callbacks.some))
     }
+    assert(condtion: (value: T) => boolean): IAsyncOption<T> {
+        return this._then(option => option.assert(condtion))
+    }
     zip<U>(option: Async<IOption<U>>): IAsyncOption<[T, U]>
     zip<U>(factory: (value: T) => Async<IOption<U>>): IAsyncOption<[T, U]>
     zip<U>(firstArg: Async<IOption<U>> | ((value: T) => Async<IOption<U>>)): IAsyncOption<[T, U]> {
@@ -144,6 +147,12 @@ export class AsyncResultImpl<T, E> implements IAsyncResult<T, E> {
     }
     mapError<U>(mapper: (error: E) => Async<U>): IAsyncResult<T, U> {
         return this.bindError(value => callAsync(mapper(value), this._callbacks.failure))
+    }
+    assert(condition: (value: T) => IOption<E>): IAsyncResult<T, E> {
+        return this._then(result => result.assert(condition))
+    }
+    assertError(condition: (error: E) => IOption<T>): IAsyncResult<T, E> {
+        return this._then(result => result.assertError(condition))
     }
     zip<U>(result: Async<IResult<U, E>>): IAsyncResult<[T, U], E>
     zip<U>(factory: (value: T) => Async<IResult<U, E>>): IAsyncResult<[T, U], E>

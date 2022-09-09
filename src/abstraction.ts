@@ -8,6 +8,8 @@ export interface IOption<T> {
     onBoth(callback: (measured: T | undefined) => void): this
     bind<U>(binder: (value: T) => IOption<U>): IOption<U>
     map<U>(mapper: (value: T) => U): IOption<U>
+    assert(condition: (value: T) => boolean): IOption<T>
+    assert<U extends T>(condition: (value: T) => value is U): IOption<U>
     zip<U>(option: IOption<U>): IOption<[T, U]>
     zip<U>(factory: (value: T) => IOption<U>): IOption<[T, U]>
     or<U>(factory: () => U): T | U
@@ -30,6 +32,8 @@ export interface IResult<T, E = any> {
     bindError<U>(binder: (error: E) => IResult<T, U>): IResult<T, U>
     map<U>(mapper: (value: T) => U): IResult<U, E>
     mapError<U>(mapper: (error: E) => U): IResult<T, U>
+    assert(condition: (value: T) => IOption<E>): IResult<T, E>
+    assertError(condition: (error: E) => IOption<T>): IResult<T, E>
     zip<U>(result: IResult<U, E>): IResult<[T, U], E>
     zip<U>(factory: (value: T) => IResult<U, E>): IResult<[T, U], E>
     or<U>(factory: (error: E) => U): T | U
@@ -63,6 +67,8 @@ export interface IAsyncOption<T> extends Promise<IOption<T>> {
     onBoth(callback: (measured: T | undefined) => Async<void>): IAsyncOption<T>
     bind<U>(binder: (value: T) => Async<IOption<U>>): IAsyncOption<U>
     map<U>(mapper: (value: T) => Async<U>): IAsyncOption<U>
+    assert(condition: (value: T) => boolean): IAsyncOption<T>
+    assert<U extends T>(condition: (value: T) => value is U): IAsyncOption<U>
     zip<U>(option: Async<IOption<U>>): IAsyncOption<[T, U]>
     zip<U>(factory: (value: T) => Async<IOption<U>>): IAsyncOption<[T, U]>
     or<U>(factory: () => Async<U>): Promise<T | U>
@@ -84,6 +90,8 @@ export interface IAsyncResult<T, E = any> extends Promise<IResult<T, E>> {
     bindError<U>(binder: (error: E) => Async<IResult<T, U>>): IAsyncResult<T, U>
     map<U>(mapper: (value: T) => Async<U>): IAsyncResult<U, E>
     mapError<U>(mapper: (error: E) => Async<U>): IAsyncResult<T, U>
+    assert(condition: (value: T) => Async<IOption<E>>): IAsyncResult<T, E>
+    assertError(condition: (error: E) => Async<IOption<T>>): IAsyncResult<T, E>
     zip<U>(result: Async<IResult<U, E>>): IAsyncResult<[T, U], E>
     zip<U>(factory: (value: T) => Async<IResult<U, E>>): IAsyncResult<[T, U], E>
     or<U>(factory: (error: E) => Async<U>): Promise<T | U>
