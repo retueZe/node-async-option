@@ -42,6 +42,13 @@ export namespace Option {
 
         return some(extracted)
     }
+    export function any<T>(options: Iterable<IOption<T>>): IOption<T> {
+        for (const option of options)
+            if (option.hasValue)
+                return option
+
+        return NONE
+    }
 }
 export type OptionMap<T> = {
     readonly [K in keyof T]: IOption<T[K]>

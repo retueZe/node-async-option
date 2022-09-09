@@ -1,4 +1,4 @@
-import { Async, callAsync, IAsyncOption, IOption, promisify } from './abstraction'
+import { Async, callAsync, IAsyncOption, IOption, isPromise, promisify } from './abstraction'
 import { Option } from './Option'
 import { AsyncOptionImpl } from './private/async'
 import { ASYNC_MONAD_CALLBACKS, ASYNC_NONE } from './private/sync'
@@ -59,6 +59,38 @@ export namespace AsyncOption {
 
         return some(promise)
             .bind(option => option)
+    }
+    export function any<T>(options: Iterable<Async<IOption<T>>>): IAsyncOption<T> {
+        const syncOptions: IOption<T>[] = []
+        const asyncOptions: Promise<IOption<T>>[] = []
+
+        for (const option of options)
+            if (isPromise(option))
+                asyncOptions.push(option)
+            else
+                syncOptions.push(option)
+
+        const syncOption = Option.any(syncOptions)
+
+        if (syncOption.hasValue) return syncOption.toAsync()
+
+        let isResultGotten = false
+        let optionsCompleted = 0
+
+        return option(new Promise(resolve => {
+            for (const option of asyncOptions)
+                option.then(option => {
+                    if (isResultGotten) return
+
+                    optionsCompleted++
+
+                    if (option.hasValue) {
+                        isResultGotten = true
+                        resolve(option.value)
+                    }
+                    if (optionsCompleted + 0.5 > asyncOptions.length) resolve(undefined)
+                })
+        }))
     }
 }
 export type AsyncOptionMap<T> = {
