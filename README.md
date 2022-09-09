@@ -38,10 +38,11 @@ Option.option(EMAIL_PATTERN.exec(EMAIL) ?? undefined)
     .toResult(() => 'user-name-required')
     .map(match => match.groups)
     .bind(({userName, hostAddress}) => Result.extractObject({
-        // function from the previous example
+        // the function from the previous example
         userName: validateName(userName).toResult(() => 'invalid-user-name')
         hostAdress: Result.success(hostAddress)
     }))
     .mapError(code => ERROR_MESSAGES[code])
+    // passes measured result i.e. either inner value or error
     .onBoth(console.log)
 ```
