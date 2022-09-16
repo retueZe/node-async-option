@@ -2,10 +2,10 @@ import { IResult } from './abstraction'
 import { Failure, Success } from './private/sync'
 
 export namespace Result {
-    export function success<T>(value: T): IResult<T, never> {
+    export function success<T, E = never>(value: T): IResult<T, E> {
         return new Success(value)
     }
-    export function failure<E>(error: E): IResult<never, E> {
+    export function failure<E, T = never>(error: E): IResult<T, E> {
         return new Failure(error)
     }
     export function extractArray<T, E>(array: readonly IResult<T, E>[], splice?: boolean, defaultItem?: T): IResult<T[], E> {
