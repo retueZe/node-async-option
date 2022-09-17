@@ -3,18 +3,23 @@ import { Option } from './Option'
 import { AsyncOptionImpl } from './private/async'
 import { ASYNC_MONAD_CALLBACKS, ASYNC_NONE } from './private/sync'
 
+/** @since v0.1.0 */
 export namespace AsyncOption {
+    /** @since v0.1.0 */
     export const NONE = ASYNC_NONE
 
     function async<T, U>(value: Async<T>, callback: (value: T) => IOption<U>): IAsyncOption<U> {
         return new AsyncOptionImpl(promisify(callAsync(value, callback)), ASYNC_MONAD_CALLBACKS)
     }
+    /** @since v0.1.0 */
     export function some<T>(value: Async<T>): IAsyncOption<T> {
         return async(value, Option.some)
     }
+    /** @since v0.1.0 */
     export function option<T>(value: Async<T | undefined>): IAsyncOption<T> {
         return async(value, Option.option)
     }
+    /** @since v0.1.0 */
     export function extractArray<T>(array: readonly Async<IOption<T>>[], splice?: boolean, defaultItem?: Async<T>): IAsyncOption<T[]> {
         splice ??= false
         const extracted = new Array<T | undefined>(array.length)
@@ -39,6 +44,7 @@ export namespace AsyncOption {
             .bind(option => option)
             .map(array => array.filter(item => typeof item !== 'undefined'))
     }
+    /** @since v0.1.0 */
     export function extractObject<T>(map: AsyncOptionMap<T>, splice?: boolean): IAsyncOption<T> {
         splice ??= false
         const extracted = {} as T
@@ -60,6 +66,7 @@ export namespace AsyncOption {
         return some(promise)
             .bind(option => option)
     }
+    /** @since v1.2.0 */
     export function any<T>(options: Iterable<Async<IOption<T>>>): IAsyncOption<T> {
         const syncOptions: IOption<T>[] = []
         const asyncOptions: Promise<IOption<T>>[] = []
@@ -93,6 +100,7 @@ export namespace AsyncOption {
         }))
     }
 }
+/** @since v0.1.0 */
 export type AsyncOptionMap<T> = {
     readonly [K in keyof T]: Async<IOption<T>>
 }

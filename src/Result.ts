@@ -1,13 +1,17 @@
 import { IResult } from './abstraction'
 import { Failure, Success } from './private/sync'
 
+/** @since v0.1.0 */
 export namespace Result {
+    /** @since v0.1.0 */
     export function success<T, E = never>(value: T): IResult<T, E> {
         return new Success(value)
     }
+    /** @since v0.1.0 */
     export function failure<E, T = never>(error: E): IResult<T, E> {
         return new Failure(error)
     }
+    /** @since v0.1.0 */
     export function extractArray<T, E>(array: readonly IResult<T, E>[], splice?: boolean, defaultItem?: T): IResult<T[], E> {
         splice ??= false
         const extracted: T[] = []
@@ -23,6 +27,7 @@ export namespace Result {
 
         return success(extracted)
     }
+    /** @since v0.1.0 */
     export function extractObject<T, E>(map: ResultMap<T, E>, splice?: boolean): IResult<T, E> {
         splice ??= false
         const extracted = {} as T
@@ -39,6 +44,7 @@ export namespace Result {
         return success(extracted)
     }
 }
+/** @since v0.1.0 */
 export type ResultMap<T, E> = {
     readonly [K in keyof T]: IResult<T[K], E>
 }
