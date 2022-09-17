@@ -1,6 +1,6 @@
 ## Description
 
-Such monads like "option" and "result" are commonly used to process some data and have an opportunity to catch any kind of failure. Option can be a value or the speciial value - "none" - meanwhile result can be a value or an error containing additional information about the failure. Occasionally, the proccessing data can be fed asynchronously. This library implements the basic synchronous variation of these 2 monads and additionally the asynchronous one. There're also a bunch of utility stuff helping solve the problem.
+Such monads like "option" and "result" are commonly used to process some data and have an opportunity to catch any kind of failure. Option can be a value or the special value - "none" - meanwhile result can be a value or an error containing additional information about the failure. Occasionally, the proccessing data can be fed asynchronously. This library implements the basic synchronous variation of these 2 monads and additionally the asynchronous one. There're also a bunch of utility stuff helping solve the problem.
 
 ## Examples
 
