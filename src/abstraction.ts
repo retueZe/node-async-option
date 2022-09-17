@@ -17,6 +17,8 @@ export interface IOption<T> {
     bind<U>(binder: (value: T) => IOption<U>): IOption<U>
     /** @since v0.1.0 */
     map<U>(mapper: (value: T) => U): IOption<U>
+    wrap(): IOption<IOption<T>>
+    wrapOr<U>(factory: () => IOption<U>) : IOption<T | U>
     /** @since v1.1.0 */
     assert(condition: (value: T) => boolean): IOption<T>
     /** @since v1.1.0 */
@@ -88,7 +90,9 @@ export function isPromise(value: unknown): value is Promise<unknown> {
     return (typeof value === 'object' || typeof value === 'function') && 'then' in value
 }
 /** @since v0.1.0 */
-export function callAsync<T, U>(async: Async<T>, callback: (value: T) => Async<U>): Async<U> {
+export function callAsync<T, U = T>(async: Async<T>, callback?: ((value: T) => Async<U>) | null): Async<U> {
+    callback ??= _ => _ as any
+
     return isPromise(async)
         ? async.then(value => callback(value))
         : callback(async)
@@ -119,6 +123,8 @@ export interface IAsyncOption<T> extends Promise<IOption<T>> {
     bind<U>(binder: (value: T) => Async<IOption<U>>): IAsyncOption<U>
     /** @since v0.1.0 */
     map<U>(mapper: (value: T) => Async<U>): IAsyncOption<U>
+    wrap(): IAsyncOption<IOption<T>>
+    wrapOr<U>(factory: () => Async<IOption<U>>): IAsyncOption<T | U>
     /** @since v1.1.0 */
     assert(condition: (value: T) => boolean): IAsyncOption<T>
     /** @since v1.1.0 */

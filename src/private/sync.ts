@@ -37,6 +37,12 @@ export class Some<T> implements IOption<T> {
     map<U>(mapper: (value: T) => U): IOption<U> {
         return new Some(mapper(this.value))
     }
+    wrap(): IOption<IOption<T>> {
+        return this.map(value => new Some(value))
+    }
+    wrapOr(): this {
+        return this
+    }
     assert(condition: (value: T) => boolean): IOption<T> {
         return condition(this.value) ? this : NONE
     }
@@ -90,6 +96,12 @@ export class None implements IOption<never> {
     map(): this {
         return this
     }
+    wrap(): this {
+        return this
+    }
+    wrapOr<U>(factory: () => IOption<U>): IOption<U> {
+        return factory()
+    }
     assert(): this {
         return this
     }
@@ -109,8 +121,8 @@ export class None implements IOption<never> {
         return ASYNC_NONE
     }
 }
-export const NONE = new None()
-export const ASYNC_NONE = new AsyncOptionImpl(promisify(NONE), ASYNC_MONAD_CALLBACKS)
+export const NONE: IOption<never> = new None()
+export const ASYNC_NONE: IAsyncOption<never> = new AsyncOptionImpl(promisify(NONE), ASYNC_MONAD_CALLBACKS)
 
 export class Success<T> implements IResult<T, never> {
     get error(): never {

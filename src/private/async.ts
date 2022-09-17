@@ -46,6 +46,14 @@ export class AsyncOptionImpl<T> implements IAsyncOption<T> {
     map<U>(mapper: (value: T) => Async<U>): IAsyncOption<U> {
         return this.bind(value => callAsync(mapper(value), this._callbacks.some))
     }
+    wrap(): IAsyncOption<IOption<T>> {
+        return this._then(option => option.wrap())
+    }
+    wrapOr<U>(factory: () => Async<IOption<U>>): IAsyncOption<T | U> {
+        return this._then(option => option.hasValue
+            ? option as IOption<T | U>
+            : callAsync(factory()))
+    }
     assert(condtion: (value: T) => boolean): IAsyncOption<T> {
         return this._then(option => option.assert(condtion))
     }
