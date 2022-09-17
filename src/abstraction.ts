@@ -17,7 +17,9 @@ export interface IOption<T> {
     bind<U>(binder: (value: T) => IOption<U>): IOption<U>
     /** @since v0.1.0 */
     map<U>(mapper: (value: T) => U): IOption<U>
+    /** @since v1.5.0 */
     wrap(): IOption<IOption<T>>
+    /** @since v1.5.0 */
     wrapOr<U>(factory: () => IOption<U>) : IOption<T | U>
     /** @since v1.1.0 */
     assert(condition: (value: T) => boolean): IOption<T>
