@@ -9,13 +9,13 @@ export namespace Parsers {
     /** @since v1.3.0 */
     export function float(input: string): IOption<number> {
         return Option.some(input)
-            .assert(FLOAT_PATTERN.test)
+            .assert(input => FLOAT_PATTERN.test(input))
             .map(parseFloat)
     }
     /** @since v1.3.0 */
     export function integer(input: string): IOption<number> {
         return Option.some(input)
-            .assert(INTEGER_PATTERN.test)
+            .assert(input => INTEGER_PATTERN.test(input))
             .map(parseInt)
     }
 }
