@@ -5,7 +5,17 @@ import { NONE as SYNC_NONE, Some } from './private/sync'
 export namespace Option {
     /** @since v0.1.0 */
     export const NONE = SYNC_NONE
-    
+    /**
+     * @example
+     * // this asserts are an analogous to if's at the beginning of functions
+     * Option.EMPTY
+     *     .assert(...) // precondition #1
+     *     .assert(...) // precondition #2
+     *     .assert(...) // precondition #3
+     *     .bind(...) // computations start here
+     */
+    export const EMPTY = some(undefined)
+
     /** @since v0.1.0 */
     export function some<T>(value: T): IOption<T> {
         return new Some(value)
