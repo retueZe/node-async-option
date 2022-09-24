@@ -46,3 +46,35 @@ Option.option(EMAIL_PATTERN.exec(EMAIL) ?? undefined)
     // passes measured result i.e. either inner value or error
     .onBoth(console.log)
 ```
+
+```javascript
+// the function from the first example
+function parseHeader(input) {
+    // ...
+}
+
+// our input
+const input = ...
+
+Option.some(input)
+    .map(input => input.split('\n'))
+    // `Option.extractArray` is bad here, because we parse all lines at once,
+    // and after all we do check whether they are valid or not. All functions
+    // inside the `Iteration` namespace checks result after each iteration.
+    .bind(lines => Iteration.map(lines, parseHeader))
+    .onBoth(console.log)
+```
+
+```javascript
+const pairs = [['a', 123], ['b', 'string'], ['c', true]]
+
+// creating an object from the key-value pair array
+Option.some(pairs)
+    .bind(pairs => Option.some({})
+        .bind(object => Iteration.forEach(pairs, ([key, value]) => {
+            object[key] = value
+        }))
+        // `Iteration.forEach` returns iteration count. So, we need to map it.
+        .map(() => object))
+    .onBoth(console.log)
+```
