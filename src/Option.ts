@@ -13,6 +13,7 @@ export namespace Option {
      *     .assert(...) // precondition #2
      *     .assert(...) // precondition #3
      *     .bind(...) // computations start here
+     * @since v1.8.0
      */
     export const EMPTY = some(undefined)
 

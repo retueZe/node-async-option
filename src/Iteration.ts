@@ -4,22 +4,34 @@ import { Result } from './Result'
 
 const _Result = Result
 
+/** @since v1.8.0 */
 export namespace Iteration {
-    /** @see {@link Signal} */
+    /**
+     * @see {@link Signal}
+     * @since v1.8.0
+     */
     export type InterruptSignal = 'break' | 'abort'
     /**
      * - `'continue'` - keeps the loop going
      * - `'break'` - interrupts the loop and makes the iterating function succeed
      * - `'abort'` - interrupts the loop and makes the iterating funciton fail
+     * @since v1.8.0
      */
     export type Signal = 'continue' | InterruptSignal
-    /** @see {@link normalizeResult} */
+    /**
+     * @see {@link normalizeResult}
+     * @since v1.8.0
+     */
     export type Result<T> =
         | IResult<T, InterruptSignal>
         | IOption<T>
         | InterruptSignal
-    /** @see {@link normalizeVoidResult} */
+    /**
+     * @see {@link normalizeVoidResult}
+     * @since v1.8.0
+     */
     export type VoidResult = Result<any> | Signal | void
+    /** @since v1.8.0 */
     export namespace Signals {
         export const BREAK = _Result.failure<'break'>('break')
         export const ABORT = _Result.failure<'abort'>('abort')
@@ -35,6 +47,7 @@ export namespace Iteration {
      * - {@link IResult} - returns the {@link result} as-is;
      * - {@link IOption} - if the {@link result} has a value, returns the value; otherwise returns {@link Signals.ABORT};
      * - {@link InterruptSignal} - returns a corresponding constant from the {@link Signals} namespace.
+     * @since v1.8.0
      */
     export function normalizeResult<T>(result: Result<T>): IResult<T, InterruptSignal> {
         return typeof result === 'string'
@@ -51,6 +64,7 @@ export namespace Iteration {
      * - {@link IOption} - if the {@link result} has a value, returns `'continue'`; otherwise returns `'abort'`
      * - {@link Signal} - returns the {@link result} as-is
      * - `void` - returns `'continue'`
+     * @since v1.8.0
      */
     export function normalizeVoidResult(result: VoidResult): Signal {
         return typeof result === 'undefined'
@@ -66,7 +80,9 @@ export namespace Iteration {
                         : result.error
     }
 
+    /** @since v1.8.0 */
     export function array<T>(length: number | null, callback: (index: number) => Result<T>): IOption<T[]>
+    /** @since v1.8.0 */
     export function array<T>(callback: (index: number) => Result<T>): IOption<T[]>
     export function array<T>(): IOption<T[]> {
         const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
@@ -93,6 +109,7 @@ export namespace Iteration {
 
         return isAborted ? Option.NONE : Option.some(array)
     }
+    /** @since v1.8.0 */
     export function forEach<T>(
         items: Iterable<T>,
         callback: (item: T, index: number) => VoidResult
@@ -112,6 +129,7 @@ export namespace Iteration {
 
         return isAborted ? Option.NONE : Option.some(index)
     }
+    /** @since v1.8.0 */
     export function map<T, U>(
         source: Iterable<T>,
         mapper: (item: T, index: number) => Result<U>
