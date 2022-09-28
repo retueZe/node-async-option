@@ -30,7 +30,7 @@ export namespace Iteration {
      * @see {@link normalizeVoidResult}
      * @since v1.8.0
      */
-    export type VoidResult = Result<any> | Signal | void
+    export type VoidResult = Result<any> | Signal | boolean | void
     /** @since v1.8.0 */
     export namespace Signals {
         export const BREAK = _Result.failure<'break'>('break')
@@ -60,9 +60,10 @@ export namespace Iteration {
     }
     /**
      * @returns Result depends on the type of the {@link result}:
-     * - {@link IResult} - if the {@link result} is succeeded, returns `'continue'`; otherwise returns the error
-     * - {@link IOption} - if the {@link result} has a value, returns `'continue'`; otherwise returns `'abort'`
-     * - {@link Signal} - returns the {@link result} as-is
+     * - {@link IResult} - if the {@link result} is succeeded, returns `'continue'`; otherwise returns the error;
+     * - {@link IOption} - if the {@link result} has a value, returns `'continue'`; otherwise returns `'abort'`;
+     * - {@link Signal} - returns the {@link result} as-is;
+     * - `boolean` - if the {@link result} is `true`, returns `'continue'`; otherwise returns `'abort'`;
      * - `void` - returns `'continue'`
      * @since v1.8.0
      */
@@ -71,13 +72,17 @@ export namespace Iteration {
             ? 'continue'
             : typeof result === 'string'
                 ? result
-                : 'hasValue' in result
-                    ? result.hasValue
+                : typeof result === 'boolean'
+                    ? result
                         ? 'continue'
                         : 'abort'
-                    : result.isSucceeded
-                        ? 'continue'
-                        : result.error
+                    : 'hasValue' in result
+                        ? result.hasValue
+                            ? 'continue'
+                            : 'abort'
+                        : result.isSucceeded
+                            ? 'continue'
+                            : result.error
     }
 
     /** @since v1.8.0 */
