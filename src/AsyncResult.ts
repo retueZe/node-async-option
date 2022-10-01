@@ -9,11 +9,11 @@ export namespace AsyncResult {
         return new AsyncResultImpl(promisify(callAsync(value, callback)), ASYNC_MONAD_CALLBACKS)
     }
     /** @since v0.1.0 */
-    export function success<T>(value: Async<T>): IAsyncResult<T, never> {
+    export function success<T, E = never>(value: Async<T>): IAsyncResult<T, E> {
         return async(value, Result.success)
     }
     /** @since v0.1.0 */
-    export function failure<E>(error: Async<E>): IAsyncResult<never, E> {
+    export function failure<E, T = never>(error: Async<E>): IAsyncResult<T, E> {
         return async(error, Result.failure)
     }
     /** @since v0.1.0 */
