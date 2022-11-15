@@ -43,6 +43,14 @@ export namespace Result {
 
         return success(extracted)
     }
+    /** @since v1.9.0 */
+    export function handle<T>(factory: () => T): IResult<T, any> {
+        let value: T
+        
+        try { value = factory() } catch (error) { return failure(error) }
+
+        return success(value)
+    }
 }
 /** @since v0.1.0 */
 export type ResultMap<T, E> = {

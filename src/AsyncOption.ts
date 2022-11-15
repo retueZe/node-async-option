@@ -9,7 +9,7 @@ export namespace AsyncOption {
     export const NONE = ASYNC_NONE
 
     function async<T, U>(value: Async<T>, callback: (value: T) => IOption<U>): IAsyncOption<U> {
-        return new AsyncOptionImpl(promisify(callAsync(value, callback)), ASYNC_MONAD_CALLBACKS)
+        return from(promisify(callAsync(value, callback)))
     }
     /** @since v0.1.0 */
     export function some<T>(value: Async<T>): IAsyncOption<T> {
@@ -98,6 +98,22 @@ export namespace AsyncOption {
                     if (optionsCompleted + 0.5 > asyncOptions.length) resolve(undefined)
                 })
         }))
+    }
+    /** @since v1.9.0 */
+    export function from<T>(promise: Promise<IOption<T>>): IAsyncOption<T> {
+        return new AsyncOptionImpl(promise, ASYNC_MONAD_CALLBACKS)
+    }
+    /** @since v1.9.0 */
+    export function handle<T>(factory: () => Async<T>): IAsyncOption<T> {
+        let value: Async<T>
+
+        try { value = factory() } catch { return NONE }
+
+        if (!isPromise(value)) return some(value)
+
+        return from(value.then(
+            value => Option.some(value),
+            () => Option.NONE))
     }
 }
 /** @since v0.1.0 */

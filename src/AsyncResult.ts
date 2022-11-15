@@ -1,4 +1,4 @@
-import { Async, callAsync, IAsyncResult, IResult, promisify } from './abstraction'
+import { Async, callAsync, IAsyncResult, IResult, isPromise, promisify } from './abstraction'
 import { AsyncResultImpl } from './private/async'
 import { ASYNC_MONAD_CALLBACKS } from './private/sync'
 import { Result } from './Result'
@@ -6,7 +6,7 @@ import { Result } from './Result'
 /** @since v0.1.0 */
 export namespace AsyncResult {
     function async<T, U, E>(value: Async<T>, callback: (value: T) => IResult<U, E>): IAsyncResult<U, E> {
-        return new AsyncResultImpl(promisify(callAsync(value, callback)), ASYNC_MONAD_CALLBACKS)
+        return from(promisify(callAsync(value, callback)))
     }
     /** @since v0.1.0 */
     export function success<T, E = never>(value: Async<T>): IAsyncResult<T, E> {
@@ -62,6 +62,22 @@ export namespace AsyncResult {
 
         return (success(promise) as IAsyncResult<IResult<T, E>, E>)
             .bind(result => result)
+    }
+    /** @since v1.9.0 */
+    export function from<T, E>(promise: Promise<IResult<T, E>>): IAsyncResult<T, E> {
+        return new AsyncResultImpl(promise, ASYNC_MONAD_CALLBACKS)
+    }
+    /** @since v1.9.0 */
+    export function handle<T>(factory: () => Async<T>): IAsyncResult<T, any> {
+        let value: Async<T>
+
+        try { value = factory() } catch (error) { return failure(error) }
+
+        if (!isPromise(value)) return success(value)
+
+        return from(value.then(
+            value => Result.success(value),
+            error => Result.failure(error)))
     }
 }
 /** @since v0.1.0 */

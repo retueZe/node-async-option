@@ -67,6 +67,14 @@ export namespace Option {
 
         return NONE
     }
+    /** @since v1.9.0 */
+    export function handle<T>(factory: () => T): IOption<T> {
+        let value: T
+        
+        try { value = factory() } catch { return NONE }
+
+        return some(value)
+    }
 }
 /** @since v0.1.0 */
 export type OptionMap<T> = {
