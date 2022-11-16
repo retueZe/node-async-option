@@ -89,7 +89,7 @@ export interface IResult<T, E = any> {
 export type Async<T> = T | Promise<T>
 /** @since v0.1.0 */
 export function isPromise(value: unknown): value is Promise<unknown> {
-    return (typeof value === 'object' || typeof value === 'function') && 'then' in value
+    return (typeof value === 'object' || typeof value === 'function') && value !== null && 'then' in value
 }
 /** @since v0.1.0 */
 export function callAsync<T, U = T>(async: Async<T>, callback?: ((value: T) => Async<U>) | null): Async<U> {
