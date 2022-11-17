@@ -100,8 +100,10 @@ export namespace AsyncOption {
         }))
     }
     /** @since v1.9.0 */
-    export function from<T>(promise: Promise<IOption<T>>): IAsyncOption<T> {
-        return new AsyncOptionImpl(promise, ASYNC_MONAD_CALLBACKS)
+    export function from<T>(option: Async<IOption<T>>): IAsyncOption<T> {
+        return isPromise(option)
+            ? new AsyncOptionImpl(option, ASYNC_MONAD_CALLBACKS)
+            : option.toAsync()
     }
     /** @since v1.9.0 */
     export function handle<T>(factory: () => Async<T>): IAsyncOption<T> {

@@ -64,8 +64,10 @@ export namespace AsyncResult {
             .bind(result => result)
     }
     /** @since v1.9.0 */
-    export function from<T, E>(promise: Promise<IResult<T, E>>): IAsyncResult<T, E> {
-        return new AsyncResultImpl(promise, ASYNC_MONAD_CALLBACKS)
+    export function from<T, E>(result: Async<IResult<T, E>>): IAsyncResult<T, E> {
+        return isPromise(result)
+            ? new AsyncResultImpl(result, ASYNC_MONAD_CALLBACKS)
+            : result.toAsync()
     }
     /** @since v1.9.0 */
     export function handle<T>(factory: () => Async<T>): IAsyncResult<T, any> {
