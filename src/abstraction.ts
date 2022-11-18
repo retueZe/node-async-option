@@ -128,7 +128,7 @@ export interface IAsyncOption<T> extends Promise<IOption<T>> {
     wrap(): IAsyncOption<IOption<T>>
     wrapOr<U>(factory: () => Async<IOption<U>>): IAsyncOption<T | U>
     /** @since v1.1.0 */
-    assert(condition: (value: T) => boolean): IAsyncOption<T>
+    assert(condition: (value: T) => Async<boolean>): IAsyncOption<T>
     /** @since v1.1.0 */
     assert<U extends T>(condition: (value: T) => value is U): IAsyncOption<U>
     /** @since v0.1.0 */
