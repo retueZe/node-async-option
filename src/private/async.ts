@@ -54,6 +54,9 @@ export class AsyncOptionImpl<T> implements IAsyncOption<T> {
             ? option as IOption<T | U>
             : callAsync(factory()))
     }
+    wrapOutside(): IAsyncOption<IOption<T>> {
+        return this._then(option => option.wrapOutside())
+    }
     assert(condition: (value: T) => Async<boolean>): IAsyncOption<T> {
         return this._then(option => option.hasValue
             ? callAsync(condition(option.value), condtionResult => option.assert(() => condtionResult))

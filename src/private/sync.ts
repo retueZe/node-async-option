@@ -43,6 +43,9 @@ export class Some<T> implements IOption<T> {
     wrapOr(): this {
         return this
     }
+    wrapOutside(): IOption<IOption<T>> {
+        return new Some(this)
+    }
     assert(condition: (value: T) => boolean): IOption<T> {
         return condition(this.value) ? this : NONE
     }
@@ -101,6 +104,9 @@ export class None implements IOption<never> {
     }
     wrapOr<U>(factory: () => IOption<U>): IOption<U> {
         return factory()
+    }
+    wrapOutside(): IOption<IOption<never>> {
+        return new Some(this)
     }
     assert(): this {
         return this

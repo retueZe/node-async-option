@@ -17,10 +17,21 @@ export interface IOption<T> {
     bind<U>(binder: (value: T) => IOption<U>): IOption<U>
     /** @since v1.0.0 */
     map<U>(mapper: (value: T) => U): IOption<U>
-    /** @since v1.5.0 */
+    /**
+     * `this.map(value => Option.some(value))`
+     * @since v1.5.0
+     */
     wrap(): IOption<IOption<T>>
-    /** @since v1.5.0 */
+    /**
+     * `this.wrap().or(factory)`
+     * @since v1.5.0
+     */
     wrapOr<U>(factory: () => IOption<U>) : IOption<T | U>
+    /**
+     * `Option.some(this)`
+     * @since v1.10.0
+     */
+    wrapOutside(): IOption<IOption<T>>
     /** @since v1.1.0 */
     assert(condition: (value: T) => boolean): IOption<T>
     /** @since v1.1.0 */
@@ -125,8 +136,12 @@ export interface IAsyncOption<T> extends Promise<IOption<T>> {
     bind<U>(binder: (value: T) => Async<IOption<U>>): IAsyncOption<U>
     /** @since v1.0.0 */
     map<U>(mapper: (value: T) => Async<U>): IAsyncOption<U>
+    /** @since v1.5.0 */
     wrap(): IAsyncOption<IOption<T>>
+    /** @since v1.5.0 */
     wrapOr<U>(factory: () => Async<IOption<U>>): IAsyncOption<T | U>
+    /** @since v1.10.0 */
+    wrapOutside(): IAsyncOption<IOption<T>>
     /** @since v1.1.0 */
     assert(condition: (value: T) => Async<boolean>): IAsyncOption<T>
     /** @since v1.1.0 */
