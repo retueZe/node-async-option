@@ -3,20 +3,20 @@ import { AsyncResultImpl } from './private/async'
 import { ASYNC_MONAD_CALLBACKS } from './private/sync'
 import { Result } from './Result'
 
-/** @since v0.1.0 */
+/** @since v1.0.0 */
 export namespace AsyncResult {
     function async<T, U, E>(value: Async<T>, callback: (value: T) => IResult<U, E>): IAsyncResult<U, E> {
         return from(promisify(callAsync(value, callback)))
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function success<T, E = never>(value: Async<T>): IAsyncResult<T, E> {
         return async(value, Result.success)
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function failure<E, T = never>(error: Async<E>): IAsyncResult<T, E> {
         return async(error, Result.failure)
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function extractArray<T, E>(array: readonly Async<IResult<T, E>>[], splice?: boolean, defaultItem?: Async<T>): IAsyncResult<T[], E> {
         splice ??= false
         const extracted = new Array<T | undefined>(array.length)
@@ -41,7 +41,7 @@ export namespace AsyncResult {
             .bind(result => result)
             .map(array => array.filter(item => typeof item !== 'undefined'))
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function extractObject<T, E>(map: AsyncResultMap<T, E>, splice?: boolean): IAsyncResult<T, E> {
         splice ??= false
         const extracted = {} as T
@@ -82,7 +82,7 @@ export namespace AsyncResult {
             error => Result.failure(error)))
     }
 }
-/** @since v0.1.0 */
+/** @since v1.0.0 */
 export type AsyncResultMap<T, E> = {
     readonly [K in keyof T]: Async<IResult<T, E>>
 }

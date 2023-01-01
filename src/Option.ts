@@ -1,9 +1,9 @@
 import { IOption } from './abstraction'
 import { NONE as SYNC_NONE, Some } from './private/sync'
 
-/** @since v0.1.0 */
+/** @since v1.0.0 */
 export namespace Option {
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export const NONE = SYNC_NONE
     /**
      * @example
@@ -17,17 +17,17 @@ export namespace Option {
      */
     export const EMPTY = some(undefined)
 
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function some<T>(value: T): IOption<T> {
         return new Some(value)
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function option<T>(value: T | undefined): IOption<T> {
         return typeof value === 'undefined'
             ? NONE
             : some(value)
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function extractArray<T>(array: readonly IOption<T>[], splice?: boolean, defaultItem?: T): IOption<T[]> {
         splice ??= false
         const extracted: T[] = []
@@ -43,7 +43,7 @@ export namespace Option {
 
         return some(extracted)
     }
-    /** @since v0.1.0 */
+    /** @since v1.0.0 */
     export function extractObject<T>(map: OptionMap<T>, splice?: boolean): IOption<T> {
         splice ??= false
         const extracted = {} as T
@@ -76,7 +76,7 @@ export namespace Option {
         return some(value)
     }
 }
-/** @since v0.1.0 */
+/** @since v1.0.0 */
 export type OptionMap<T> = {
     readonly [K in keyof T]: IOption<T[K]>
 }
