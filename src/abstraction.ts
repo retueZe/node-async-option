@@ -29,7 +29,7 @@ export interface IOption<T> {
     wrapOr<U>(factory: () => IOption<U>) : IOption<T | U>
     /**
      * `Option.some(this)`
-     * @since v1.10.0
+     * @since v1.12.0
      */
     wrapOutside(): IOption<IOption<T>>
     /** @since v1.1.0 */
@@ -140,7 +140,7 @@ export interface IAsyncOption<T> extends Promise<IOption<T>> {
     wrap(): IAsyncOption<IOption<T>>
     /** @since v1.5.0 */
     wrapOr<U>(factory: () => Async<IOption<U>>): IAsyncOption<T | U>
-    /** @since v1.10.0 */
+    /** @since v1.12.0 */
     wrapOutside(): IAsyncOption<IOption<T>>
     /** @since v1.1.0 */
     assert(condition: (value: T) => Async<boolean>): IAsyncOption<T>
