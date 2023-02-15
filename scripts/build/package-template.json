@@ -1,0 +1,6 @@
+{
+  "name": "<(PACKAGE_NAME)/<(NAMESPACE_PATH)",
+  "main": "<(INDEX_PATH).cjs",
+  "module": "<(INDEX_PATH).mjs",
+  "types": "<(INDEX_PATH).d.ts"
+}

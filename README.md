@@ -4,28 +4,40 @@ Such monads like "option" and "result" are commonly used to process some data an
 
 ## Examples
 
+### Options example
+
 ```javascript
+import { AsyncSome } from 'async-option/async'
+import { from } from 'async-option/utils/option'
+import { extract as extractAsync } from 'async-option/async/utils/option'
+
 // parsing some header line
 const HEADER_LINE_PATTERN = /(?<name>[a-z]+)=(?<url>.*)/i
 const contents = {}
 
-AsyncOption.some(readLine()) // some async input function
-    // convert `T | undefined` to `IOption<T>`
-    .bind(line => Option.option(HEADER_LINE_PATTERN.exec(line) ?? undefined))
+new AsyncSome(readLine()) // some async input function
+    // convert `T | undefined` to `Option<T>`
+    .bind(line => from(HEADER_LINE_PATTERN.exec(line) ?? undefined))
     .map(match => match.groups)
     // if all options in the object have value, returns a compiled object of their values
-    .bind(({name, url}) => AsyncOption.extractObject({
+    .bind(({name, url}) => extractAsync({
         name: validateName(name), // sync option
-        content: AsyncOption.some(fetch(url)) // async option
-            .bind(res => Option.option(res.ok ? res.text() : undefined))
+        content: new AsyncSome(fetch(url)) // async option
+            .bind(res => from(res.ok ? res.text() : undefined))
     }))
     // executes only if the option has a value
     .onSome(({name, content}) => contents[name] = content)
-    // `IAsyncOption<T>` extends `Promise<IOption<T>>`
+    // `AsyncOption<T>` extends `Promise<Option<T>>`
     .then(() => console.log(contents))
 ```
 
+### Results example
+
 ```javascript
+import { Success } from 'async-option'
+import * as OptionUtils from 'async-option/utils/option'
+import * as ResultUtils from 'async-option/utils/result'
+
 // this pattern is incorrect and used for demonstration purposes
 const EMAIL_PATTERN = /(?<userName>[^@]+)@(?<hostAddress>.+)/i
 const EMAIL = 'me@example.net'
@@ -34,21 +46,25 @@ const ERROR_MESSAGES = {
     'invalid-user-name': 'Invalid user name.'
 }
 
-Option.option(EMAIL_PATTERN.exec(EMAIL) ?? undefined)
+OptionUtils.from(EMAIL_PATTERN.exec(EMAIL) ?? undefined)
     .toResult(() => 'user-name-required')
     .map(match => match.groups)
-    .bind(({userName, hostAddress}) => Result.extractObject({
+    .bind(({userName, hostAddress}) => ResultUtils.extract({
         // the function from the previous example
         userName: validateName(userName).toResult(() => 'invalid-user-name')
-        hostAdress: Result.success(hostAddress)
+        hostAdress: new Success(hostAddress)
     }))
     .mapError(code => ERROR_MESSAGES[code])
     // passes measured result i.e. either inner value or error
     .onBoth(console.log)
 ```
 
+### `Iteration` namespace example #1
+
 ```javascript
-// the function from the first example
+import { map } from 'async-option/iteration'
+
+// the first example wrapped in a function
 function parseHeader(input) {
     // ...
 }
@@ -58,23 +74,134 @@ const input = ...
 
 Option.some(input)
     .map(input => input.split('\n'))
-    // `Option.extractArray` is bad here, because we parse all lines at once,
+    // `OptionUtils.all` is bad here, because we parse all lines at once,
     // and after all we do check whether they are valid or not. All functions
     // inside the `Iteration` namespace checks result after each iteration.
-    .bind(lines => Iteration.map(lines, parseHeader))
+    .bind(lines => map(lines, parseHeader))
     .onBoth(console.log)
 ```
 
+### `Iteration` namespace example #2
+
 ```javascript
+import { Some } from 'async-option'
+import { forEach } from 'async-option/iteration'
+
 const pairs = [['a', 123], ['b', 'string'], ['c', true]]
 
 // creating an object from the key-value pair array
-Option.some(pairs)
-    .bind(pairs => Option.some({})
-        .bind(object => Iteration.forEach(pairs, ([key, value]) => {
+new Some(pairs)
+    .bind(pairs => new Some({})
+        .bind(object => forEach(pairs, ([key, value]) => {
             object[key] = value
         }))
-        // `Iteration.forEach` returns iteration count. So, we need to map it.
+        // `forEach` returns iteration count. So, we need to map it.
+        // you can also return values such as 'break' or 'abort' to interrupt
+        // the loop (see JSDoc)
         .map(() => object))
     .onBoth(console.log)
+```
+
+### Creating `else-if` chains
+
+```javascript
+import { NONE } from 'async-option'
+
+const DEFAULT_INDENT = ' '.repeat(4)
+
+// we want a `string | number | boolean | null | undefined` -> `string` function
+function normalizeIndent(indent) {
+    return NONE // `elseIf` fires only if option is none
+        .elseIf([ // implies logical AND
+            () => typeof indent === 'undefined',
+            () => indent === null,
+            () => typeof indent === 'boolean' && indent
+        ], () => DEFAULT_INDENT)
+        .elseIf(
+            () => typeof indent === 'boolean' && !indent,
+            () => '')
+        .elseIf(() => typeof indent === 'number', () => ' '.repeat(indent))
+        .elseIf(() => typeof indent === 'string', () => indent)
+}
+
+const INDENTS = [
+    'abc',
+    2,
+    true,
+    false,
+    null,
+    undefined,
+    {}
+]
+
+for (const indent of INDENTS)
+    normalizeIndent(indent)
+        .onBoth(normalized => console.log(indent, typeof normalized === 'string'
+            ? `"${normalized}"`
+            : normalized))
+
+// Output:
+// abc "abc"
+// 2 "  "
+// true "    "
+// false ""
+// null "    "
+// undefined "    "
+// {} undefined
+```
+
+### `GenericFailureError` TS example
+
+```typescript
+import * as OptionUtils from 'async-option/utils/option'
+import * as Parsers from 'async-option/parsers'
+
+interface PortParserErrorMap {
+    'bad-input': {
+        input: string
+    }
+    'out-of-range': {
+        min: number
+        max: number
+        actual: number
+    }
+}
+type PortParserError = GenericFailureError<PortParserErrorMap>
+
+const MIN_PORT = 1024
+const MAX_PORT = 0xffff
+
+function parsePort(input: string): Result<number, PortParserError> {
+    // proper integer parser returning options
+    return Parsers.integer(input)
+        .toResult<PortParserError>(() => ({reason: 'bad-input', input}))
+        .filter(port => OptionUtils.EMPTY // option containing `undefined`
+            // condition of faillure
+            .filter(() => port < MIN_PORT - 0.5 || port > MAX_PORT + 0.5)
+            // executes only if failed, so, no extra objects created if it is succeeded
+            .map(() => ({
+                reason: 'out-of-range',
+                min: MIN_PORT,
+                max: MAX_PORT,
+                actual: port
+            })))
+}
+
+const PORTS = [
+    'abc',
+    '1000',
+    '80000',
+    '8000'
+]
+
+for (const port of PORTS)
+    parsePort(port)
+        .onSuccess(port => console.log('port:', port))
+        .onFailure(error => console.log('error:', error))
+
+// Output:
+// error: { reason: 'bad-input', input: 'abc' }
+// error: { reason: 'out-of-range', min: 1024, max: 65535, actual: 1000 }
+// error: { reason: 'out-of-range', min: 1024, max: 65535, actual: 80000 }
+// port: 8000
 ```

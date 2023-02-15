@@ -1,8 +1,0 @@
-{
-    "extends": "./tsconfig.dev.json",
-    "include": ["src/**/*.test.ts"],
-    "exclude": [],
-    "typeAcquisition": {
-        "include": ["jest"]
-    }
-}
