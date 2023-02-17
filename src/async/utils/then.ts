@@ -1,5 +1,5 @@
 import { Async } from '..'
-import { isPromise } from './Promise'
+import { isPromise } from 'node:util/types'
 
 /** @since v2.0.0 */
 export type AsyncMapper<T, U> = (value: T) => Async<U>
