@@ -35,16 +35,6 @@
       "import": "./dist/async/utils.mjs",
       "types": "./dist/async/utils.d.ts"
     },
-    "./async/utils/option": {
-      "require": "./dist/async/utils/option.cjs",
-      "import": "./dist/async/utils/option.mjs",
-      "types": "./dist/async/utils/option.d.ts"
-    },
-    "./async/utils/result": {
-      "require": "./dist/async/utils/result.cjs",
-      "import": "./dist/async/utils/result.mjs",
-      "types": "./dist/async/utils/result.d.ts"
-    },
     "./iteration": {
       "require": "./dist/iteration.cjs",
       "import": "./dist/iteration.mjs",

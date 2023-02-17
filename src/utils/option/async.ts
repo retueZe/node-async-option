@@ -1,6 +1,6 @@
-import { Option, Some, NONE } from '../../..'
-import { Async, AsyncOption, ASYNC_NONE, AsyncSome } from '../..'
-import { isPromise } from '../Promise'
+import { Option, Some, NONE } from '../..'
+import { Async, AsyncOption, ASYNC_NONE, AsyncSome } from '../../async'
+import { isPromise } from 'node:util/types'
 
 /** @since v2.0.0 */
 export type AsyncOptionMap<T> = {
@@ -8,14 +8,14 @@ export type AsyncOptionMap<T> = {
 }
 
 /** @since v2.0.0 */
-export function from<T>(value: Async<T | undefined>): AsyncOption<T> {
+export function fromAsync<T>(value: Async<T | undefined>): AsyncOption<T> {
     // TSC is not smart enough to pass this without `as any`
     return typeof value === 'undefined'
         ? ASYNC_NONE as any
         : new AsyncSome(value)
 }
 /** @since v2.0.0 */
-export function handle<T>(factory: () => Async<T>): AsyncOption<T> {
+export function handleAsync<T>(factory: () => Async<T>): AsyncOption<T> {
     let factoryResult: Async<T>
 
     try {
@@ -30,7 +30,7 @@ export function handle<T>(factory: () => Async<T>): AsyncOption<T> {
         .then(value => new Some(value), () => NONE))
 }
 /** @since v2.0.0 */
-export function all<T>(_options: Iterable<Async<Option<T>>>): AsyncOption<T[]> {
+export function allAsync<T>(_options: Iterable<Async<Option<T>>>): AsyncOption<T[]> {
     const options: Async<Option<T>>[] = Array.isArray(_options) ? _options : [..._options]
     let resultReceived = false
     let waiterCount = 0
@@ -75,7 +75,7 @@ export function all<T>(_options: Iterable<Async<Option<T>>>): AsyncOption<T[]> {
         : new AsyncOption(new Promise(resolve => resultReceiver = resolve))
 }
 /** @since v2.0.0 */
-export function any<T>(options: Iterable<Async<Option<T>>>): AsyncOption<T> {
+export function anyAsync<T>(options: Iterable<Async<Option<T>>>): AsyncOption<T> {
     let resultReceived = false
     let waiterCount = 0
     let resultReceiver: ((option: Option<T>) => void) | null = null
@@ -108,7 +108,7 @@ export function any<T>(options: Iterable<Async<Option<T>>>): AsyncOption<T> {
         : new AsyncOption(new Promise(resolve => resultReceiver = resolve))
 }
 /** @since v2.0.0 */
-export function extract<T>(map: AsyncOptionMap<T>): AsyncOption<T> {
+export function extractAsync<T>(map: AsyncOptionMap<T>): AsyncOption<T> {
     let failed = false
     let waiterCount = 0
     let onCompleted: (() => void) | null = null
@@ -154,4 +154,4 @@ export function extract<T>(map: AsyncOptionMap<T>): AsyncOption<T> {
 }
 
 /** @since v2.0.0 */
-export const EMPTY = new AsyncSome<unknown>(undefined)
+export const ASYNC_EMPTY = new AsyncSome<unknown>(undefined)

@@ -37,8 +37,6 @@ function applyDefaultConfig(config) {
             '',
             'async',
             'async/utils',
-            'async/utils/option',
-            'async/utils/result',
             'iteration',
             'iteration/signals',
             'parsers',
