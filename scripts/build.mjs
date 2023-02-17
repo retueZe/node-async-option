@@ -46,17 +46,20 @@ function buildNamespaces() {
 }
 
 program
-    .addOption(new Option('-c, --config <configiration>').choices(['dev', 'development', 'prod', 'production']))
+    .addOption(new Option('-c, --config <configiration>').choices(['dev', 'development', 'prod', 'production', 'test']))
     .option('-r, --retrain')
     .action(({config, retrain: _retrain}) => {
         try {
             config ??= 'dev'
             const isDevelopment = config !== 'prod' && config !== 'production'
+            const tscConfig = config === 'test'
+                ? 'tsconfig.test.json'
+                : 'tsconfig.json'
             const retrain = _retrain ?? false
 
             if (!retrain) execSync(`node ${join(__dirname, 'build-cleanup.mjs')}`)
             if (isDevelopment) {
-                execSync('npx tsc --outDir dist --module commonjs --inlineSourceMap')
+                execSync(`npx tsc -p ${tscConfig} --outDir dist --module commonjs --inlineSourceMap`)
             } else {
                 execSync('npx rollup -c')
                 buildNamespaces()
