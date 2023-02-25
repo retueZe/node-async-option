@@ -4,7 +4,7 @@ export class ValueNotProvidedError extends Error {
     static readonly DEFAULT_MESSAGE = 'Value not provided.'
 
     /** @since v2.0.0 */
-    constructor(message?: string) {
+    constructor(message?: string | null) {
         super(message ?? ValueNotProvidedError.DEFAULT_MESSAGE)
         this.name = ValueNotProvidedError.name
     }
