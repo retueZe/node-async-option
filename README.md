@@ -59,7 +59,7 @@ OptionUtils.from(EMAIL_PATTERN.exec(EMAIL) ?? undefined)
     .onBoth(console.log)
 ```
 
-### `Iteration` namespace example #1
+### `async-option/iteration` namespace example #1
 
 ```javascript
 import { map } from 'async-option/iteration'
@@ -81,7 +81,7 @@ Option.some(input)
     .onBoth(console.log)
 ```
 
-### `Iteration` namespace example #2
+### `async-option/iteration` namespace example #2
 
 ```javascript
 import { Some } from 'async-option'
@@ -112,14 +112,15 @@ const DEFAULT_INDENT = ' '.repeat(4)
 // we want a `string | number | boolean | null | undefined` -> `string` function
 function normalizeIndent(indent) {
     return NONE // `elseIf` fires only if option is none
-        .elseIf([ // implies logical AND
-            () => typeof indent === 'undefined',
-            () => indent === null,
-            () => typeof indent === 'boolean' && indent
-        ], () => DEFAULT_INDENT)
         .elseIf(
-            () => typeof indent === 'boolean' && !indent,
-            () => '')
+            () => typeof indent === 'undefined' ||
+                indent === null ||
+                (typeof indent === 'boolean' && indent),
+            () => DEFAULT_INDENT)
+        .elseIf([ // implies logical AND (for multiple filters)
+            () => typeof indent === 'boolean'
+            () => !indent,
+        ], () => '')
         .elseIf(() => typeof indent === 'number', () => ' '.repeat(indent))
         .elseIf(() => typeof indent === 'string', () => indent)
 }
@@ -156,6 +157,7 @@ for (const indent of INDENTS)
 import * as OptionUtils from 'async-option/utils/option'
 import * as Parsers from 'async-option/parsers'
 
+// might've used enums here
 interface PortParserErrorMap {
     'bad-input': {
         input: string
@@ -175,6 +177,8 @@ function parsePort(input: string): Result<number, PortParserError> {
     // proper integer parser returning options
     return Parsers.integer(input)
         .toResult<PortParserError>(() => ({reason: 'bad-input', input}))
+        // result's `filter` method consumes a callback returning an option containing an error, so, if
+        // the option has value, the result become a failure containing that error; otherwise nothing changes
         .filter(port => OptionUtils.EMPTY // option containing `undefined`
             // condition of faillure
             .filter(() => port < MIN_PORT - 0.5 || port > MAX_PORT + 0.5)
