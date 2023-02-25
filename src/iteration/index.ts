@@ -1,4 +1,4 @@
-import { Result, Option, Success, NONE, Some } from '..'
+import { Result, ResultLike, Option, OptionLike, Success, Failure, NONE, Some } from '..'
 import * as Signals from './signals'
 
 /** @since v2.0.0 */
@@ -12,8 +12,8 @@ export type InterruptSignal = 'break' | 'abort'
 export type Signal = 'continue' | InterruptSignal
 /** @since v2.0.0 */
 export type LoopResult<T> =
-    | Result<T, InterruptSignal>
-    | Option<T>
+    | ResultLike<T, InterruptSignal>
+    | OptionLike<T>
     | InterruptSignal
 /** @since v2.0.0 */
 export type VoidResult = LoopResult<any> | Signal | boolean | void
@@ -37,7 +37,9 @@ export function normalizeLoopResult<T>(result: LoopResult<T>): Result<T, Interru
             ? result.hasValue
                 ? new Success(result.value)
                 : Signals.ABORT
-            : result
+            : result.isSucceeded
+                ? new Success(result.value)
+                : new Failure(result.error)
 }
 /**
  * @returns Result depends on the type of the {@link result}:

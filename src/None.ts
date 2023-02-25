@@ -1,6 +1,6 @@
 import { AsyncOption, ASYNC_NONE } from './async'
 import { Failure } from './Failure'
-import type { Option } from './Option'
+import type { Option, OptionLike } from './Option'
 import { Some } from './Some'
 import { ValueNotProvidedError } from './ValueNotProvidedError'
 
@@ -28,7 +28,7 @@ export interface None {
     /** @since v2.0.0 */
     wrapOutside(): Some<this>
     /** @since v2.0.0 */
-    or<O extends Option<any>>(factory: () => O): O
+    or<T>(factory: () => OptionLike<T>): Option<T>
     /** @since v2.0.0 */
     elseIf<U>(condition: ElseIfCondition, factory: () => U): Some<U> | this
     /** @since v2.0.0 */
@@ -38,12 +38,13 @@ export interface None {
     /** @since v2.0.0 */
     get(errorFactory: () => Error): never
     /** @since v2.0.0 */
-    toResult<E = unknown>(factory: () => E): Failure<E>
+    toResult<E = unknown>(errorFactory: () => E): Failure<E>
     /** @since v2.0.0 */
     toAsync(): AsyncOption<never>
 }
 type Predicate = () => boolean
-type ElseIfCondition = Predicate | Iterable<Predicate>
+/** @since v2.0.0 */
+export type ElseIfCondition = Predicate | Iterable<Predicate>
 const None = class None implements NoneInterface {
     get value(): never {
         throw new ValueNotProvidedError()
@@ -80,8 +81,14 @@ const None = class None implements NoneInterface {
     wrapOutside(): Some<this> {
         return new Some(this)
     }
-    or<U, O extends Option<U> = Option<U>>(factory: () => O): O {
-        return factory()
+    or<U>(factory: () => OptionLike<U>): Option<U> {
+        const result = factory()
+
+        return result instanceof Some || result instanceof None
+            ? result
+            : result.hasValue
+                ? new Some(result.value)
+                : NONE
     }
     elseIf<U>(condition: ElseIfCondition, factory: () => U): Some<U> | this {
         if (typeof condition === 'function') {
@@ -102,13 +109,19 @@ const None = class None implements NoneInterface {
     get(errorFactory: () => Error): never {
         throw errorFactory()
     }
-    toResult<E = unknown>(factory: () => E): Failure<E> {
-        return new Failure(factory())
+    toResult<E = unknown>(errorFactory: () => E): Failure<E> {
+        return new Failure(errorFactory())
     }
     toAsync(): AsyncOption<never> {
-        throw ASYNC_NONE
+        return ASYNC_NONE
     }
 }
 type NoneInterface = None
+/** @since v2.0.0 */
+export interface NoneLike {
+    readonly value: never
+    readonly hasValue: false
+}
+
 /** @since v2.0.0 */
 export const NONE: None = new None()

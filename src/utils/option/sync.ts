@@ -1,8 +1,8 @@
-import { None, Some, NONE, Option } from '../..'
+import { None, Some, NONE, Option, OptionLike } from '../..'
 
 /** @since v2.0.0 */
 export type OptionMap<T> = {
-    [K in keyof T]: Option<T[K]> | (() => Option<T[K]>)
+    [K in keyof T]: OptionLike<T[K]> | (() => OptionLike<T[K]>)
 }
 type FromResult<T> = T extends unknown
     ? unknown extends T
@@ -30,7 +30,7 @@ export function handle<T>(factory: () => T): Option<T> {
     }
 }
 /** @since v2.0.0 */
-export function all<T>(options: Iterable<Option<T>>): Option<T[]> {
+export function all<T>(options: Iterable<OptionLike<T>>): Option<T[]> {
     const values: T[] = []
 
     for (const option of options)
@@ -42,10 +42,10 @@ export function all<T>(options: Iterable<Option<T>>): Option<T[]> {
     return new Some(values)
 }
 /** @since v2.0.0 */
-export function any<T>(options: Iterable<Option<T>>): Option<T> {
+export function any<T>(options: Iterable<OptionLike<T>>): Option<T> {
     for (const option of options)
         if (option.hasValue)
-            return option
+            return new Some(option.value)
 
     return NONE
 }

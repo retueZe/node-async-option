@@ -1,6 +1,6 @@
 import { AsyncResult } from './async'
 import { NONE, None } from './None'
-import type { Option, ValueOf } from './Option'
+import type { OptionLike } from './Option'
 import type { Result } from './Result'
 import { Success } from './Success'
 import { ValueNotProvidedError } from './ValueNotProvidedError'
@@ -27,23 +27,23 @@ export interface Failure<E = unknown> {
     /** @since v2.0.0 */
     bind(): this
     /** @since v2.0.0 */
-    bindError<O extends Result<any, any>>(binder: (error: E) => O): O
+    bindError<R extends Result<any, any>>(binder: (error: E) => R): R
     /** @since v2.0.0 */
     map(): this
     /** @since v2.0.0 */
     mapError<U>(mapper: (error: E) => U): Failure<U>
     /** @since v2.0.0 */
-    or<R extends Result<any, any>>(factory: () => R): R
+    or<R extends Result<any, any>>(factory: (error: E) => R): R
     /** @since v2.0.0 */
-    elseIf<T>(condition: ElseIfCondition<E>, factory: (error: E) => T): Success<T> | this
+    elseIf<T>(condition: FailureElseIfCondition<E>, factory: (error: E) => T): Success<T> | this
     /** @since v2.0.0 */
     else<T>(factory: (error: E) => T): Success<T>
     /** @since v2.0.0 */
     filter(): this
     /** @since v2.0.0 */
-    filterError<O extends Option<any>>(condition: (error: E) => O): filterErrorResult<this, O>
+    filterError<T>(condition: (error: E) => OptionLike<T>): Success<T> | this
     /** @since v2.0.0 */
-    get(errorFactory: () => Error): never
+    get(errorFactory: (error: E) => Error): never
     /** @since v2.0.0 */
     getError(): E
     /** @since v2.0.0 */
@@ -52,10 +52,8 @@ export interface Failure<E = unknown> {
     toAsync(): AsyncResult<never, E>
 }
 type ErrorPredicate<E = unknown> = (error: E) => boolean
-type ElseIfCondition<E = unknown> = ErrorPredicate<E> | Iterable<ErrorPredicate<E>>
-type filterErrorResult<F extends Failure<any>, O extends Option<any>> = O['hasValue'] extends true
-    ? Success<ValueOf<O>>
-    : F
+/** @since v2.0.0 */
+export type FailureElseIfCondition<E = unknown> = ErrorPredicate<E> | Iterable<ErrorPredicate<E>>
 /** @since v2.0.0 */
 export type GenericFailureError<M> = ({
     [R in keyof M]: {reason: R} & M[R]
@@ -93,7 +91,7 @@ export const Failure: FailureConstructor = class Failure<E = unknown> implements
     bind(): this {
         return this
     }
-    bindError<O extends Result<any, any>>(binder: (error: E) => O): O {
+    bindError<R extends Result<any, any>>(binder: (error: E) => R): R {
         return binder(this.error)
     }
     map(): this {
@@ -102,10 +100,10 @@ export const Failure: FailureConstructor = class Failure<E = unknown> implements
     mapError<U>(mapper: (error: E) => U): Failure<U> {
         return new Failure(mapper(this.error))
     }
-    or<R extends Result<any, any>>(factory: () => R): R {
-        return factory()
+    or<R extends Result<any, any>>(factory: (error: E) => R): R {
+        return factory(this.error)
     }
-    elseIf<T>(condition: ElseIfCondition<E>, factory: (error: E) => T): this | Success<T> {
+    elseIf<T>(condition: FailureElseIfCondition<E>, factory: (error: E) => T): this | Success<T> {
         if (typeof condition === 'function') {
             if (!condition(this.error)) return this
         } else {
@@ -122,16 +120,16 @@ export const Failure: FailureConstructor = class Failure<E = unknown> implements
     filter(): this {
         return this
     }
-    filterError<O extends Option<any>>(condition: (error: E) => O): filterErrorResult<this, O> {
-        const conditionResult = condition(this.value)
+    filterError<T>(condition: (error: E) => OptionLike<T>): Success<T> | this {
+        const conditionResult = condition(this.error)
 
         // TSC is not smart enough to pass this without `as any`
         return conditionResult.hasValue
             ? new Success(conditionResult.value) as any
             : this
     }
-    get(errorFactory: () => Error): never {
-        throw errorFactory()
+    get(errorFactory: (error: E) => Error): never {
+        throw errorFactory(this.error)
     }
     getError(): E {
         return this.error
@@ -149,3 +147,9 @@ interface FailureConstructor {
     new<E = unknown>(error: E): Failure<E>
 }
 type FailureInterface<E = unknown> = Failure<E>
+/** @since v2.0.0 */
+export interface FailureLike<E = unknown> {
+    readonly value: never
+    readonly error: E
+    readonly isSucceeded: false
+}

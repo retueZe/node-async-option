@@ -1,6 +1,6 @@
 import { AsyncResult } from './async'
 import { Failure } from './Failure'
-import type { Option, ValueOf } from './Option'
+import type { OptionLike } from './Option'
 import type { Result } from './Result'
 import { Some } from './Some'
 import { ValueNotProvidedError } from './ValueNotProvidedError'
@@ -25,7 +25,7 @@ export interface Success<T> {
     /** @since v2.0.0 */
     swap(): Failure<T>
     /** @since v2.0.0 */
-    bind<O extends Result<any, any>>(binder: (value: T) => O): O
+    bind<R extends Result<any, any>>(binder: (value: T) => R): R
     /** @since v2.0.0 */
     bindError(): this
     /** @since v2.0.0 */
@@ -39,21 +39,18 @@ export interface Success<T> {
     /** @since v2.0.0 */
     else(): this
     /** @since v2.0.0 */
-    filter<O extends Option<any> = Option<any>>(condition: (value: T) => O): filterValueResult<this, O>
+    filter<E>(condition: (value: T) => OptionLike<E>): this | Failure<E>
     /** @since v2.0.0 */
     filterError(): this
     /** @since v2.0.0 */
     get(): T
     /** @since v2.0.0 */
-    getError(errorFactory: () => Error): never
+    getError(errorFactory: (value: T) => Error): never
     /** @since v2.0.0 */
     toOption(): Some<T>
     /** @since v2.0.0 */
     toAsync(): AsyncResult<T, never>
 }
-type filterValueResult<S extends Success<any>, O extends Option<any>> = O['hasValue'] extends true
-    ? Failure<ValueOf<O>>
-    : S
 /** @since v2.0.0 */
 export const Success: SuccessConstructor = class Success<T> implements SuccessInterface<T> {
     get error(): never {
@@ -84,7 +81,7 @@ export const Success: SuccessConstructor = class Success<T> implements SuccessIn
     swap(): Failure<T> {
         return new Failure(this.value)
     }
-    bind<O extends Result<any, any>>(binder: (value: T) => O): O {
+    bind<R extends Result<any, any>>(binder: (value: T) => R): R {
         return binder(this.value)
     }
     bindError(): this {
@@ -105,7 +102,7 @@ export const Success: SuccessConstructor = class Success<T> implements SuccessIn
     else(): this {
         return this
     }
-    filter<O extends Option<any>>(condition: (value: T) => O): filterValueResult<this, O> {
+    filter<E>(condition: (value: T) => OptionLike<E>): this | Failure<E> {
         const conditionResult = condition(this.value)
 
         // TSC is not smart enough to pass this without `as any`
@@ -119,8 +116,8 @@ export const Success: SuccessConstructor = class Success<T> implements SuccessIn
     get(): T {
         return this.value
     }
-    getError(errorFactory: () => Error): never {
-        throw errorFactory()
+    getError(errorFactory: (value: T) => Error): never {
+        throw errorFactory(this.value)
     }
     toOption(): Some<T> {
         return new Some(this.value)
@@ -135,3 +132,9 @@ interface SuccessConstructor {
     new<T>(value: T): Success<T>
 }
 type SuccessInterface<T> = Success<T>
+/** @since v2.0.0 */
+export interface SuccessLike<T> {
+    readonly value: T
+    readonly error: never
+    readonly isSucceeded: true
+}

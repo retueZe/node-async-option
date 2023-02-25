@@ -1,36 +1,38 @@
-import type { AsyncOption, AsyncResult } from './async'
-import type { Failure } from './Failure'
-import type { None } from './None'
-import type { Some } from './Some'
-import type { Success } from './Success'
+import type { AsyncOptionLike, AsyncResultLike } from './async'
+import type { FailureLike } from './Failure'
+import type { None, NoneLike } from './None'
+import type { Some, SomeLike } from './Some'
+import type { SuccessLike } from './Success'
 
 /** @since v2.0.0 */
 export type Option<T> = Some<T> | None
 /** @since v2.0.0 */
-export type ValueOf<C> = C extends Some<infer T>
+export type OptionLike<T> = SomeLike<T> | NoneLike
+/** @since v2.0.0 */
+export type ValueOf<C> = C extends SomeLike<infer T>
     ? T
-    : C extends None
+    : C extends NoneLike
         ? never
-        : C extends Success<infer T>
+        : C extends SuccessLike<infer T>
             ? T
-            : C extends Failure
+            : C extends FailureLike
                 ? never
-                : C extends AsyncOption<infer T>
+                : C extends AsyncOptionLike<infer T>
                     ? T
-                    : C extends AsyncResult<infer T>
+                    : C extends AsyncResultLike<infer T, any>
                         ? T
                         : never
 /** @since v2.0.0 */
-export type ErrorOf<C> = C extends Some<any>
+export type ErrorOf<C> = C extends SomeLike<any>
     ? never
-    : C extends None
+    : C extends NoneLike
         ? undefined
-        : C extends Success<any>
+        : C extends SuccessLike<any>
             ? never
-            : C extends Failure<infer E>
+            : C extends FailureLike<infer E>
                 ? E
-                : C extends AsyncOption<any>
+                : C extends AsyncOptionLike<any>
                     ? undefined
-                    : C extends AsyncResult<any, infer E>
+                    : C extends AsyncResultLike<any, infer E>
                         ? E
                         : never

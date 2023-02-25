@@ -1,8 +1,8 @@
-import { Result, Success, Failure } from '../..'
+import { Result, ResultLike, Success, Failure } from '../..'
 
 /** @since v2.0.0 */
 export type ResultMap<T, E = unknown> = {
-    [K in keyof T]: Result<T[K], E> | (() => Result<T[K], E>)
+    [K in keyof T]: ResultLike<T[K], E> | (() => ResultLike<T[K], E>)
 }
 /** @since v2.0.0 */
 export type ErrorMap<T, E = unknown> = {
@@ -18,7 +18,7 @@ export function handle<T>(factory: () => T): Result<T> {
     }
 }
 /** @since v2.0.0 */
-export function all<T, E = unknown>(results: Iterable<Result<T, E>>): Result<T[], E[]> {
+export function all<T, E = unknown>(results: Iterable<ResultLike<T, E>>): Result<T[], E[]> {
     const values: T[] = []
     const errors: E[] = []
 
@@ -33,7 +33,7 @@ export function all<T, E = unknown>(results: Iterable<Result<T, E>>): Result<T[]
         : new Success(values)
 }
 /** @since v2.0.0 */
-export function any<T, E = unknown>(results: Iterable<Result<T, E>>): Result<T, E[]> {
+export function any<T, E = unknown>(results: Iterable<ResultLike<T, E>>): Result<T, E[]> {
     const errors: E[] = []
 
     for (const result of results)

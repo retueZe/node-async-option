@@ -1,4 +1,4 @@
-import { Option, Some, ValueNotProvidedError, Success, Failure } from '..'
+import { Option, OptionLike, Some, ValueNotProvidedError, Success, Failure } from '..'
 //! importing separately because of circular dependency and the dependency is used at the top-level of the file
 import { NONE } from '../None'
 import { AsyncResult } from './AsyncResult'
@@ -164,6 +164,8 @@ interface AsyncOptionConstructor {
     new<T>(option: Async<Option<T>>): AsyncOption<T>
 }
 type AsyncOptionInterface<T> = AsyncOption<T>
+/** @since v2.0.0 */
+export type AsyncOptionLike<T> = PromiseLike<OptionLike<T>>
 
 /** @since v2.0.0 */
 export const ASYNC_NONE = new AsyncOption<never>(NONE)

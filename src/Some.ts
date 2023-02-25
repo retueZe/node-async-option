@@ -1,6 +1,6 @@
 import { AsyncOption } from './async'
 import { NONE, None } from './None'
-import type { Option } from './Option'
+import type { Option, OptionLike } from './Option'
 import { Success } from './Success'
 
 /** @since v2.0.0 */
@@ -19,7 +19,7 @@ export interface Some<T> {
     /** @since v2.0.0 */
     onBoth(callback: (measured: T) => unknown): this
     /** @since v2.0.0 */
-    bind<O extends Option<any>>(binder: (value: T) => O): O
+    bind<U>(binder: (value: T) => OptionLike<U>): Option<U>
     /** @since v2.0.0 */
     map<U>(mapper: (value: T) => U): Some<U>
     /** @since v2.0.0 */
@@ -67,8 +67,14 @@ export const Some: SomeConstructor = class Some<T> implements SomeInterface<T> {
 
         return this
     }
-    bind<U, O extends Option<U> = Option<U>>(binder: (value: T) => O): O {
-        return binder(this.value)
+    bind<U>(binder: (value: T) => OptionLike<U>): Option<U> {
+        const bound = binder(this.value)
+
+        return bound instanceof Some || bound === NONE
+            ? bound as any
+            : bound.hasValue
+                ? new Some(bound.value)
+                : NONE
     }
     map<U>(mapper: (value: T) => U): Some<U> {
         return new Some(mapper(this.value))
@@ -108,4 +114,9 @@ interface SomeConstructor {
     readonly prototype: Some<any>
 
     new<T>(value: T): Some<T>
+}
+/** @since v2.0.0 */
+export interface SomeLike<T> {
+    readonly value: T
+    readonly hasValue: true
 }

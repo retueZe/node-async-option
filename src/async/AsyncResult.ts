@@ -1,4 +1,4 @@
-import { Option, ValueNotProvidedError, Success, Failure, Result } from '..'
+import { Option, ValueNotProvidedError, Success, Failure, Result, ResultLike } from '..'
 import { Async, AsyncOption } from './AsyncOption'
 import { pipeAsync, promisify, then } from './utils'
 
@@ -32,7 +32,7 @@ export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {
     /** @since v2.0.0 */
     or<T1, E1>(factory: (error: E) => Async<Result<T1, E1>>): AsyncResult<T | T1, E | E1>
     /** @since v2.0.0 */
-    elseIf<U>(condition: AsyncElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E>
+    elseIf<U>(condition: AsyncFailureElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E>
     /** @since v2.0.0 */
     else<U>(factory: (error: E) => Async<U>): AsyncResult<T | U, never>
     /** @since v2.0.0 */
@@ -47,7 +47,8 @@ export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {
     toOption(): AsyncOption<T>
 }
 type AsyncErrorPredicate<E = unknown> = (error: E) => Async<boolean>
-type AsyncElseIfCondition<E = unknown> = AsyncErrorPredicate<E> | Iterable<AsyncErrorPredicate<E>>
+/** @since v2.0.0 */
+export type AsyncFailureElseIfCondition<E = unknown> = AsyncErrorPredicate<E> | Iterable<AsyncErrorPredicate<E>>
 /** @since v2.0.0 */
 export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> implements AsyncResultInterface<T, E> {
     private readonly _result: Promise<Result<T, E>>
@@ -115,7 +116,7 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
             ? result
             : factory(result.error))
     }
-    elseIf<U>(condition: AsyncElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E> {
+    elseIf<U>(condition: AsyncFailureElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E> {
         return this._then(result => {
             if (result.isSucceeded) return result
 
@@ -186,3 +187,5 @@ interface AsyncResultConstructor {
     new<T, E = unknown>(result: Async<Result<T, E>>): AsyncResult<T, E>
 }
 type AsyncResultInterface<T, E = unknown> = AsyncResult<T, E>
+/** @since v2.0.0 */
+export type AsyncResultLike<T, E = unknown> = PromiseLike<ResultLike<T, E>>
