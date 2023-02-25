@@ -45,9 +45,9 @@ export function then<T>(
         ? value.then(callback)
         : callback(value)
 
-    return rest.reduceRight((y, f) => isPromise(y)
-        ? y.then(y => f(y))
-        : f(y), isPromise(value)
+    return rest.reduce((value, mapper) => isPromise(value)
+        ? value.then(mapper)
+        : mapper(value), isPromise(value)
         ? value.then(callback)
         : callback(value))
 }
