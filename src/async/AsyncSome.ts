@@ -1,6 +1,6 @@
 import { Some } from '..'
 import { Async, AsyncOption } from './AsyncOption'
-import { then } from './utils'
+import { then } from '../utils/async'
 
 /** @since v2.0.0 */
 export const AsyncSome: AsyncSomeConstructor = class AsyncSome<T> extends AsyncOption<T> {

@@ -1,4 +1,4 @@
-import { Async } from '..'
+import { Async } from '../../async'
 import { isPromise } from 'node:util/types'
 
 /** @since v2.0.0 */

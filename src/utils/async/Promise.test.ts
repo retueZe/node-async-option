@@ -1,5 +1,5 @@
 import { isPromise } from 'node:util/types'
-import { Async } from '../AsyncOption'
+import { Async } from '../../async'
 import { promisify } from './Promise'
 
 it.each<Async<Record<string, never>>>([{}, Promise.resolve({})])('promisify', async expectedValue => {

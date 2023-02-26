@@ -1,6 +1,6 @@
 import { Option, ValueNotProvidedError, Success, Failure, Result, ResultLike } from '..'
 import { Async, AsyncOption } from './AsyncOption'
-import { pipeAsync, promisify, then } from './utils'
+import { pipeAsync, promisify, then } from '../utils/async'
 import { isPromise } from 'node:util/types'
 
 /** @since v2.0.0 */

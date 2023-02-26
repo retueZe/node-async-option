@@ -1,4 +1,4 @@
-import { Async } from '..'
+import { Async } from '../../async'
 import { pipeAsync, promisify } from '.'
 import { isPromise } from 'util/types'
 

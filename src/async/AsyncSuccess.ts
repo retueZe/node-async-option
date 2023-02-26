@@ -1,7 +1,7 @@
 import { Success } from '..'
 import { Async } from './AsyncOption'
 import { AsyncResult } from './AsyncResult'
-import { then } from './utils'
+import { then } from '../utils/async'
 
 /** @since v2.0.0 */
 export const AsyncSuccess: AsyncSuccessConstructor = class AsyncSuccess<T> extends AsyncResult<T, never> {
