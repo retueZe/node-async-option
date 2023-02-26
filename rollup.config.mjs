@@ -36,11 +36,11 @@ function applyDefaultConfig(config) {
         input: createInput([
             '',
             'async',
-            'async/utils',
             'iteration',
             'iteration/signals',
             'parsers',
             'utils',
+            'utils/async',
             'utils/option',
             'utils/result'
         ])
