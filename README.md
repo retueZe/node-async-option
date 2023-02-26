@@ -9,7 +9,7 @@ Such monads like "option" and "result" are commonly used to process some data an
 ```javascript
 import { AsyncSome } from 'async-option/async'
 import { from } from 'async-option/utils/option'
-import { extract as extractAsync } from 'async-option/async/utils/option'
+import { extractAsync } from 'async-option/utils/option'
 
 // parsing some header line
 const HEADER_LINE_PATTERN = /(?<name>[a-z]+)=(?<url>.*)/i
