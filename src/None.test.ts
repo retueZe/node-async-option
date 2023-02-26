@@ -54,6 +54,7 @@ describe('None', () => {
         expect(created).toBe(factoryResult)
     })
     it.each<[ElseIfCondition, number, Option<Record<string, never>>]>([
+        [[], 0, new Some({})],
         [() => true, 0, new Some({})],
         [[() => true, () => true], 2, new Some({})],
         [() => false, 0, NONE],

@@ -1,3 +1,4 @@
+import { isPromise } from 'node:util/types'
 import { Option, OptionLike, Some, ValueNotProvidedError, Success, Failure } from '..'
 //! importing separately because of circular dependency and the dependency is used at the top-level of the file
 import { NONE } from '../None'
@@ -107,18 +108,33 @@ export const AsyncOption: AsyncOptionConstructor = class AsyncOption<T> implemen
         return this._then(option => {
             if (option.hasValue) return option
 
-            const subconditions: Promise<boolean>[] = []
+            const subconditionResults: Promise<boolean>[] = []
 
             if (typeof condition === 'function') {
-                subconditions.push(promisify(condition()))
-            } else {
-                for (const subcondition of condition)
-                    subconditions.push(promisify(subcondition()))
-            }
+                const conditionResult = condition()
 
-            const conditionPromise = subconditions.length < 1.5
-                ? subconditions[0]
-                : Promise.all(subconditions).then(results => results.every(_ => _))
+                if (isPromise(conditionResult))
+                    subconditionResults.push(conditionResult)
+                else
+                    return conditionResult
+                        ? then(factory(), value => new Some(value))
+                        : option
+            } else {
+                for (const subcondition of condition) {
+                    const subconditionResult = subcondition()
+
+                    if (isPromise(subconditionResult))
+                        subconditionResults.push(subconditionResult)
+                    else if (!subconditionResult)
+                        return option
+                }
+            }
+            if (subconditionResults.length < 0.5)
+                return then(factory(), value => new Some(value))
+
+            const conditionPromise = subconditionResults.length < 1.5
+                ? subconditionResults[0]
+                : Promise.all(subconditionResults).then(results => results.every(_ => _))
 
             return conditionPromise
                 .then(result => result

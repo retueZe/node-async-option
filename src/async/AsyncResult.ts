@@ -1,6 +1,7 @@
 import { Option, ValueNotProvidedError, Success, Failure, Result, ResultLike } from '..'
 import { Async, AsyncOption } from './AsyncOption'
 import { pipeAsync, promisify, then } from './utils'
+import { isPromise } from 'node:util/types'
 
 /** @since v2.0.0 */
 export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {
@@ -81,7 +82,7 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
     }
 
     private _then<T1, E1>(callback: (result: Result<T, E>) => Async<Result<T1, E1>>): AsyncResult<T1, E1> {
-        return new AsyncResult(this._result.then(callback))
+        return new AsyncResult(this.then(callback))
     }
     onSuccess(callback: (value: T) => Async<unknown>): AsyncResult<T, E> {
         return this._then(result => result.onSuccess(callback))
@@ -97,13 +98,13 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
     }
     bind<U>(binder: (value: T) => Async<Result<U, E>>): AsyncResult<U, E> {
         return this._then(result => result.isSucceeded
-            ? then(result.value, binder)
+            ? binder(result.value)
             : result)
     }
     bindError<U>(binder: (error: E) => Async<Result<T, U>>): AsyncResult<T, U> {
         return this._then(result => result.isSucceeded
             ? result
-            : then(result.error, binder))
+            : binder(result.error))
     }
     map<U>(mapper: (value: T) => Async<U>): AsyncResult<U, E> {
         return this.bind(pipeAsync(mapper, mapped => new Success(mapped)))
@@ -120,18 +121,33 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
         return this._then(result => {
             if (result.isSucceeded) return result
 
-            const subconditions: Promise<boolean>[] = []
+            const subconditionResults: Promise<boolean>[] = []
 
             if (typeof condition === 'function') {
-                subconditions.push(promisify(condition(result.error)))
-            } else {
-                for (const subcondition of condition)
-                    subconditions.push(promisify(subcondition(result.error)))
-            }
+                const conditionResult = condition(result.error)
 
-            const conditionPromise = subconditions.length < 1.5
-                ? subconditions[0]
-                : Promise.all(subconditions).then(results => results.every(_ => _))
+                if (isPromise(conditionResult))
+                    subconditionResults.push(conditionResult)
+                else
+                    return conditionResult
+                        ? then(factory(result.error), value => new Success(value))
+                        : result
+            } else {
+                for (const subcondition of condition) {
+                    const subconditionResult = subcondition(result.error)
+
+                    if (isPromise(subconditionResult))
+                        subconditionResults.push(subconditionResult)
+                    else if (!subconditionResult)
+                        return result
+                }
+            }
+            if (subconditionResults.length < 0.5)
+                return then(factory(result.error), value => new Success(value))
+
+            const conditionPromise = subconditionResults.length < 1.5
+                ? subconditionResults[0]
+                : Promise.all(subconditionResults).then(results => results.every(_ => _))
 
             return conditionPromise
                 .then(conditionResult => conditionResult
