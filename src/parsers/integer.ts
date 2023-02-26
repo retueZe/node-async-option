@@ -7,5 +7,5 @@ export const INTEGER_PATTERN = /^[+-]?\d+$/
 export function integer(input: string): Option<number> {
     return new Some(input)
         .filter(input => INTEGER_PATTERN.test(input))
-        .map(input => Number.parseFloat(input))
+        .map(input => parseInt(input))
 }
