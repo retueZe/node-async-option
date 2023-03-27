@@ -66,9 +66,6 @@ describe('Success', () => {
     it('mapError', () => {
         instance.mapError()
     })
-    it('or', () => {
-        instance.or()
-    })
     it('elseIf', () => {
         instance.elseIf()
     })

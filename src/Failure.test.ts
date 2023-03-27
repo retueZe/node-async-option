@@ -66,16 +66,6 @@ describe('Failure', () => {
         expect(mapper).toBeCalledTimes(1)
         expect(mapped.error).toBe(mappedError)
     })
-    it('or', () => {
-        const other = new Success({})
-        const factory = jest.fn(() => other)
-
-        const orResult = instance.or(factory)
-
-        expect(factory).toBeCalledWith(error)
-        expect(factory).toBeCalledTimes(1)
-        expect(orResult).toBe(other)
-    })
     it.each<[FailureElseIfCondition, number, Result<Record<string, never>, Record<string, never>>]>([
         [() => true, 0, new Success({})],
         [[() => true, () => true], 2, new Success({})],

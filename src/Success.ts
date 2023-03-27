@@ -33,8 +33,6 @@ export interface Success<T> {
     /** @since v2.0.0 */
     mapError(): this
     /** @since v2.0.0 */
-    or(): this
-    /** @since v2.0.0 */
     elseIf(): this
     /** @since v2.0.0 */
     else(): this
@@ -91,9 +89,6 @@ export const Success: SuccessConstructor = class Success<T> implements SuccessIn
         return new Success(mapper(this.value))
     }
     mapError(): this {
-        return this
-    }
-    or(): this {
         return this
     }
     elseIf(): this {

@@ -31,8 +31,6 @@ export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {
     /** @since v2.0.0 */
     mapError<U>(mapper: (error: E) => Async<U>): AsyncResult<T, U>
     /** @since v2.0.0 */
-    or<T1, E1>(factory: (error: E) => Async<Result<T1, E1>>): AsyncResult<T | T1, E | E1>
-    /** @since v2.0.0 */
     elseIf<U>(condition: AsyncFailureElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E>
     /** @since v2.0.0 */
     else<U>(factory: (error: E) => Async<U>): AsyncResult<T | U, never>
@@ -111,11 +109,6 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
     }
     mapError<U>(mapper: (error: E) => Async<U>): AsyncResult<T, U> {
         return this.bindError(pipeAsync(mapper, mapped => new Failure(mapped)))
-    }
-    or<T1, E1>(factory: (error: E) => Async<Result<T1, E1>>): AsyncResult<T | T1, E | E1> {
-        return this._then<T | T1, E | E1>(result => result.isSucceeded
-            ? result
-            : factory(result.error))
     }
     elseIf<U>(condition: AsyncFailureElseIfCondition<E>, factory: (error: E) => Async<U>): AsyncResult<T | U, E> {
         return this._then(result => {

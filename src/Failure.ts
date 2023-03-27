@@ -33,8 +33,6 @@ export interface Failure<E = unknown> {
     /** @since v2.0.0 */
     mapError<U>(mapper: (error: E) => U): Failure<U>
     /** @since v2.0.0 */
-    or<R extends Result<any, any>>(factory: (error: E) => R): R
-    /** @since v2.0.0 */
     elseIf<T>(condition: FailureElseIfCondition<E>, factory: (error: E) => T): Success<T> | this
     /** @since v2.0.0 */
     else<T>(factory: (error: E) => T): Success<T>
@@ -99,9 +97,6 @@ export const Failure: FailureConstructor = class Failure<E = unknown> implements
     }
     mapError<U>(mapper: (error: E) => U): Failure<U> {
         return new Failure(mapper(this.error))
-    }
-    or<R extends Result<any, any>>(factory: (error: E) => R): R {
-        return factory(this.error)
     }
     elseIf<T>(condition: FailureElseIfCondition<E>, factory: (error: E) => T): this | Success<T> {
         if (typeof condition === 'function') {
