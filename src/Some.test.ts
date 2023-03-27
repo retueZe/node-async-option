@@ -1,4 +1,4 @@
-import { NONE, Some } from '.'
+import { NONE, Some, OptionLike, ValueNotProvidedError } from '.'
 
 describe('Some', () => {
     const value = {}
@@ -32,15 +32,23 @@ describe('Some', () => {
         expect(callback).toBeCalledWith(value)
         expect(callback).toBeCalledTimes(1)
     })
-    it('bind', () => {
-        const binderResult = new Some({})
+    it.each<OptionLike<Record<string, never>>>([
+        new Some({}),
+        NONE,
+        {hasValue: true, value: {}},
+        {hasValue: false, get value(): never {
+            throw new ValueNotProvidedError()
+        }}
+    ])('or', (binderResult) => {
         const binder = jest.fn(() => binderResult)
 
         const bound = instance.bind(binder)
 
-        expect(binder).toBeCalledWith(value)
+        expect(binder).toBeCalledWith(instance.value)
         expect(binder).toBeCalledTimes(1)
-        expect(bound).toBe(binderResult)
+        expect(bound.hasValue).toBe(binderResult.hasValue)
+
+        if (bound.hasValue) expect(bound.value).toBe(binderResult.value)
     })
     it('map', () => {
         const mapperResult = {}

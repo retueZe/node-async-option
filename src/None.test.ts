@@ -1,4 +1,4 @@
-import { NONE, Option, Some, ValueNotProvidedError, ElseIfCondition } from '.'
+import { NONE, Option, Some, ValueNotProvidedError, ElseIfCondition, OptionLike } from '.'
 
 describe('None', () => {
     const instance = NONE
@@ -43,15 +43,23 @@ describe('None', () => {
     it('wrapOutside', () => {
         instance.wrapOutside()
     })
-    it('or', () => {
-        const factoryResult = new Some({})
+    it.each<OptionLike<Record<string, never>>>([
+        new Some({}),
+        NONE,
+        {hasValue: true, value: {}},
+        {hasValue: false, get value(): never {
+            throw new ValueNotProvidedError()
+        }}
+    ])('or', (factoryResult) => {
         const factory = jest.fn(() => factoryResult)
 
         const created = instance.or(factory)
 
         expect(factory).toBeCalledWith()
         expect(factory).toBeCalledTimes(1)
-        expect(created).toBe(factoryResult)
+        expect(created.hasValue).toBe(factoryResult.hasValue)
+
+        if (created.hasValue) expect(created.value).toBe(factoryResult.value)
     })
     it.each<[ElseIfCondition, number, Option<Record<string, never>>]>([
         [[], 0, new Some({})],
