@@ -7,6 +7,10 @@ export type AsyncResultMap<T, E = unknown> = {
     [K in keyof T]: Async<Result<T[K], E>> | (() => Async<Result<T[K], E>>)
 }
 
+/** @since v2.4.0 */
+export function emptyAsync<E>(): AsyncResult<unknown, E> {
+    return ASYNC_EMPTY
+}
 /** @since v2.0.0 */
 export function handleAsync<T>(factory: () => Async<T>): AsyncResult<T> {
     let factoryResult: Async<T>

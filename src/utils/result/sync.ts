@@ -9,6 +9,10 @@ export type ErrorMap<T, E = unknown> = {
     [K in keyof T]?: E
 }
 
+/** @since v2.4.0 */
+export function empty<E>(): Result<unknown, E> {
+    return EMPTY
+}
 /** @since v2.0.0 */
 export function handle<T>(factory: () => T): Result<T> {
     try {
