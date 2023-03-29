@@ -45,10 +45,8 @@ export function any<T, E = unknown>(results: Iterable<ResultLike<T, E>>): Result
     return new Failure(errors)
 }
 /** @since v2.0.0 */
-export function extract<T, E = unknown>(map: ResultMap<T, E>): Result<T, ErrorMap<T, E>> {
+export function extract<T, E = unknown>(map: ResultMap<T, E>): Result<T, E> {
     const object: Record<PropertyKey, unknown> = {}
-    const errors: Record<PropertyKey, E> = {}
-    let failed = false
 
     for (const key in map) {
         const result: Result<any, E> = typeof map[key] === 'function'
@@ -57,15 +55,11 @@ export function extract<T, E = unknown>(map: ResultMap<T, E>): Result<T, ErrorMa
 
         if (result.isSucceeded)
             object[key] = result.value
-        else {
-            errors[key] = result.error
-            failed = true
-        }
+        else
+            return new Failure(result.error)
     }
 
-    return failed
-        ? new Failure(errors)
-        : new Success(object as T)
+    return new Success(object as T)
 }
 
 /** @since v2.0.0 */

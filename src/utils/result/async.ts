@@ -1,7 +1,6 @@
 import { AsyncSuccess, Async, AsyncResult, AsyncFailure } from '../../async'
 import { Result, Success, Failure, Option, Some, NONE } from '../..'
 import { isPromise } from 'node:util/types'
-import { ErrorMap } from './sync'
 
 /** @since v2.0.0 */
 export type AsyncResultMap<T, E = unknown> = {
@@ -112,11 +111,12 @@ export function anyAsync<T, E = unknown>(results: ArrayLike<Async<Result<T, E>>>
             : resolve(new Failure(errors))))
 }
 /** @since v2.0.0 */
-export function extractAsync<T, E = unknown>(map: AsyncResultMap<T, E>): AsyncResult<T, ErrorMap<T, E>> {
-    let failed = false
+export function extractAsync<T, E = unknown>(map: AsyncResultMap<T, E>): AsyncResult<T, E> {
     const object: Record<PropertyKey, unknown> = {}
-    const errors: Record<PropertyKey, E> = {}
+    let error: Option<E> = NONE
     const promises: Promise<void>[] = []
+    let minIndex = Number.MAX_VALUE
+    let i = 0
 
     for (const key in map) {
         const result: Async<Result<any, E>> = typeof map[key] === 'function'
@@ -124,30 +124,34 @@ export function extractAsync<T, E = unknown>(map: AsyncResultMap<T, E>): AsyncRe
             : map[key]
 
         if (isPromise(result)) {
-            promises.push(result.then(result => {
+            promises.push(result.then((i => result => {
                 if (result.isSucceeded)
                     object[key] = result.value
-                else {
-                    failed = true
-                    errors[key] = result.error
+                else if (!error.hasValue && i < minIndex) {
+                    error = new Some(result.error)
+                    minIndex = i
                 }
-            }))
+            })(i)))
         } else {
             if (result.isSucceeded)
                 object[key] = result.value
             else {
-                failed = true
-                errors[key] = result.error
+                error = new Some(result.error)
+                minIndex = i
+
+                break
             }
         }
+
+        i++
     }
 
     return promises.length < 0.5
-        ? failed
-            ? new AsyncFailure(errors)
+        ? error.hasValue
+            ? new AsyncFailure(error.value)
             : new AsyncSuccess(object as T)
-        : new AsyncResult(Promise.all(promises).then(() => failed
-            ? new Failure(errors)
+        : new AsyncResult(Promise.all(promises).then(() => error.hasValue
+            ? new Failure(error.value)
             : new Success(object as T)))
 }
 
