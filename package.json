@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "async-option",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Async option and result monads library.",
   "keywords": [
     "option",
@@ -30,11 +30,6 @@
       "import": "./dist/async.mjs",
       "types": "./dist/async.d.ts"
     },
-    "./async/utils": {
-      "require": "./dist/async/utils.cjs",
-      "import": "./dist/async/utils.mjs",
-      "types": "./dist/async/utils.d.ts"
-    },
     "./iteration": {
       "require": "./dist/iteration.cjs",
       "import": "./dist/iteration.mjs",
@@ -54,6 +49,11 @@
       "require": "./dist/utils.cjs",
       "import": "./dist/utils.mjs",
       "types": "./dist/utils.d.ts"
+    },
+    "./utils/async": {
+      "require": "./dist/utils/async.cjs",
+      "import": "./dist/utils/async.mjs",
+      "types": "./dist/utils/async.d.ts"
     },
     "./utils/option": {
       "require": "./dist/utils/option.cjs",
