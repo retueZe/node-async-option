@@ -13,5 +13,5 @@ export const AsyncSuccess: AsyncSuccessConstructor = class AsyncSuccess<T> exten
 interface AsyncSuccessConstructor {
     readonly prototype: AsyncResult<any, never>
 
-    new<T>(value: Async<T>): AsyncResult<T, never>
+    new<T, E = never>(value: Async<T>): AsyncResult<T, E>
 }

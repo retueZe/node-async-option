@@ -13,5 +13,5 @@ export const AsyncFailure: AsyncFailureConstructor = class AsyncFailure<E> exten
 interface AsyncFailureConstructor {
     readonly prototype: AsyncResult<never, any>
 
-    new<E>(error: Async<E>): AsyncResult<never, E>
+    new<E, T = never>(error: Async<E>): AsyncResult<T, E>
 }
