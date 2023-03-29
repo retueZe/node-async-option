@@ -44,6 +44,10 @@ export interface Success<T> {
     get(): T
     /** @since v2.0.0 */
     getError(errorFactory: (value: T) => Error): never
+    /** @since v2.1.0 */
+    demand(): this
+    /** @since v2.1.0 */
+    demandError(errorFactory: (value: T) => Error): never
     /** @since v2.0.0 */
     toOption(): Some<T>
     /** @since v2.0.0 */
@@ -112,6 +116,12 @@ export const Success: SuccessConstructor = class Success<T> implements SuccessIn
         return this.value
     }
     getError(errorFactory: (value: T) => Error): never {
+        throw errorFactory(this.value)
+    }
+    demand(): this {
+        return this
+    }
+    demandError(errorFactory: (value: T) => Error): never {
         throw errorFactory(this.value)
     }
     toOption(): Some<T> {

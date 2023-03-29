@@ -44,6 +44,10 @@ export interface Failure<E = unknown> {
     get(errorFactory: (error: E) => Error): never
     /** @since v2.0.0 */
     getError(): E
+    /** @since v2.1.0 */
+    demand(errorFactory: (error: E) => Error): never
+    /** @since v2.1.0 */
+    demandError(): this
     /** @since v2.0.0 */
     toOption(): None
     /** @since v2.0.0 */
@@ -128,6 +132,12 @@ export const Failure: FailureConstructor = class Failure<E = unknown> implements
     }
     getError(): E {
         return this.error
+    }
+    demand(errorFactory: (error: E) => Error): never {
+        throw errorFactory(this.error)
+    }
+    demandError(): this {
+        return this
     }
     toOption(): None {
         return NONE

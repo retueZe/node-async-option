@@ -144,6 +144,17 @@ describe('Failure', () => {
 
         expect(gottenError).toBe(error)
     })
+    it('demand', () => {
+        const expectedError = new Error()
+        const factory = jest.fn(() => expectedError)
+
+        expect(() => instance.demand(factory)).toThrow(expectedError)
+        expect(factory).toBeCalledWith(error)
+        expect(factory).toBeCalledTimes(1)
+    })
+    it('demandError', () => {
+        instance.demandError()
+    })
     it('toOption', () => {
         instance.toOption()
     })

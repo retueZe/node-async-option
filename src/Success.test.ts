@@ -102,6 +102,17 @@ describe('Success', () => {
         expect(factory).toBeCalledWith(value)
         expect(factory).toBeCalledTimes(1)
     })
+    it('demand', () => {
+        instance.demand()
+    })
+    it('demandError', () => {
+        const error = new Error()
+        const factory = jest.fn(() => error)
+
+        expect(() => instance.demandError(factory)).toThrow(error)
+        expect(factory).toBeCalledWith(value)
+        expect(factory).toBeCalledTimes(1)
+    })
     it('toOption', () => {
         const option = instance.toOption()
 

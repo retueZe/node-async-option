@@ -42,6 +42,10 @@ export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {
     get(errorFactory: (error: E) => Async<Error>): Promise<T>
     /** @since v2.0.0 */
     getError(errorFactory: (value: T) => Async<Error>): Promise<E>
+    /** @since v2.1.0 */
+    demand<U = never>(errorFactory: (error: E) => Async<Error>): AsyncResult<T, U>
+    /** @since v2.1.0 */
+    demandError<U = never>(errorFactory: (value: T) => Async<Error>): AsyncResult<U, E>
     /** @since v2.0.0 */
     toOption(): AsyncOption<T>
 }
@@ -176,6 +180,16 @@ export const AsyncResult: AsyncResultConstructor = class AsyncResult<T, E> imple
         return this.then(result => result.isSucceeded
             ? then(errorFactory(result.value), error => Promise.reject(error))
             : result.error)
+    }
+    demand<U = never>(errorFactory: (error: E) => Async<Error>): AsyncResult<T, U> {
+        return this._then(result => result.isSucceeded
+            ? result
+            : then(errorFactory(result.error), error => Promise.reject(error)))
+    }
+    demandError<U = never>(errorFactory: (value: T) => Async<Error>): AsyncResult<U, E> {
+        return this._then(result => result.isSucceeded
+            ? then(errorFactory(result.value), error => Promise.reject(error))
+            : result)
     }
     toOption(): AsyncOption<T> {
         return new AsyncOption(this.then(result => result.toOption()))
