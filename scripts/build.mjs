@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { execSync } from 'node:child_process'
 import { Option, program } from 'commander'
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
@@ -57,11 +58,11 @@ program
                 : 'tsconfig.json'
             const retrain = _retrain ?? false
 
-            if (!retrain) execSync(`node ${join(__dirname, 'build-cleanup.mjs')}`)
+            if (!retrain) execSync(join(__dirname, 'build-cleanup.mjs'))
             if (isDevelopment) {
-                execSync(`npx tsc -p ${tscConfig} --outDir dist --module commonjs --inlineSourceMap`)
+                execSync(`tsc -p ${tscConfig} --outDir dist --module commonjs --inlineSourceMap`)
             } else {
-                execSync('npx rollup -c')
+                execSync('rollup -c')
                 buildNamespaces()
             }
         } catch (error) {
