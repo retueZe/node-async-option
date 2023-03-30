@@ -1,7 +1,6 @@
 import { Option, ValueNotProvidedError, Success, Failure, Result, ResultLike } from '..'
 import { Async, AsyncOption } from './AsyncOption'
-import { pipeAsync, promisify, then } from '../utils/async'
-import { isPromise } from 'node:util/types'
+import { pipeAsync, promisify, then, isPromise } from '../utils/async'
 
 /** @since v2.0.0 */
 export interface AsyncResult<T, E = unknown> extends Promise<Result<T, E>> {

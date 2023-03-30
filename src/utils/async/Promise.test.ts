@@ -1,6 +1,5 @@
-import { isPromise } from 'node:util/types'
 import { Async } from '../../async'
-import { promisify } from './Promise'
+import { promisify, isPromise } from './Promise'
 
 it.each<Async<Record<string, never>>>([{}, Promise.resolve({})])('promisify', async expectedValue => {
     const promise = promisify(expectedValue)

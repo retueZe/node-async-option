@@ -1,9 +1,8 @@
-import { isPromise } from 'node:util/types'
 import { Option, OptionLike, Some, ValueNotProvidedError, Success, Failure } from '..'
 //! importing separately because of circular dependency and the dependency is used at the top-level of the file
 import { NONE } from '../None'
 import { AsyncResult } from './AsyncResult'
-import { pipeAsync, promisify, then } from '../utils/async'
+import { pipeAsync, promisify, then, isPromise } from '../utils/async'
 
 /** @since v2.0.0 */
 export interface AsyncOption<T> extends Promise<Option<T>> {

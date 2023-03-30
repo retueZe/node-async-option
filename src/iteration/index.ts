@@ -1,4 +1,6 @@
 import { Result, ResultLike, Option, OptionLike, Success, Failure, NONE, Some } from '..'
+import { Async, AsyncOption, ASYNC_NONE, AsyncSome } from '../async'
+import { isPromise } from '../utils/async'
 import * as Signals from './signals'
 
 /** @since v2.0.0 */
@@ -130,4 +132,75 @@ export function map<T, U>(
 
             mapped.push(iterationResult.value)
         }).map(() => mapped))
+}
+
+/** @since v2.0.0 */
+export function arrayAsync<T>(
+    length: number | null,
+    callback: (index: number) => Async<LoopResult<T>>
+): AsyncOption<T[]>
+/** @since v2.0.0 */
+export function arrayAsync<T>(callback: (index: number) => Async<LoopResult<T>>): AsyncOption<T[]>
+export function arrayAsync<T>(): AsyncOption<T[]> {
+    const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
+        ? arguments[0]
+        : null
+    const callback: (index: number) => Async<LoopResult<T>> = typeof arguments[1] === 'undefined'
+        ? arguments[0]
+        : arguments[1]
+    const array = length === null ? [] : new Array<T>(length)
+    let signal: Option<InterruptSignal> = NONE
+    let waiterCount = 0
+
+    const promises: Promise<void>[] = []
+    let resolve: ((array: Option<T[]>) => void) | null = null
+
+    for (let i = 0; length === null || i < length; i++) {
+        const callbackResult = callback(i)
+
+        if (isPromise(callbackResult)) {
+            promises.push(callbackResult.then((i => callbackResult => {
+                if (signal.measured === 'abort') return
+
+                const iterationResult = normalizeLoopResult(callbackResult)
+
+                console.log(iterationResult)
+
+                if (!iterationResult.isSucceeded) {
+                    signal = new Some(iterationResult.error)
+
+                    if (signal.value === 'break') {
+                        if (i < array.length - 0.5) array.length = i
+                    } else {
+                        if (resolve !== null) resolve(NONE)
+
+                        return
+                    }
+                } else if (array.length > i + 0.5)
+                    array[i] = iterationResult.value
+
+                waiterCount--
+
+                if (waiterCount < 0.5 && resolve !== null) resolve(new Some(array))
+            })(i)))
+            waiterCount++
+        } else {
+            const iterationResult = normalizeLoopResult(callbackResult)
+
+            if (!iterationResult.isSucceeded) {
+                signal = new Some(iterationResult.error)
+                array.length = i
+
+                break
+            }
+
+            array[i] = iterationResult.value
+        }
+    }
+
+    if (signal.measured === 'abort') return ASYNC_NONE
+
+    return promises.length < 0.5
+        ? new AsyncSome(array)
+        : new AsyncOption(new Promise<Option<T[]>>(_resolve => resolve = _resolve))
 }

@@ -1,6 +1,6 @@
 import { Option, Some, NONE } from '../..'
 import { Async, AsyncOption, ASYNC_NONE, AsyncSome } from '../../async'
-import { isPromise } from 'node:util/types'
+import { isPromise } from '../async'
 
 /** @since v2.0.0 */
 export type AsyncOptionMap<T> = {

@@ -1,6 +1,5 @@
 import { Async } from '../../async'
-import { pipeAsync, promisify } from '.'
-import { isPromise } from 'util/types'
+import { pipeAsync, promisify, isPromise } from '.'
 
 describe('pipeAsync', () => {
     it.each<Async<Record<string, never>>>([{}, Promise.resolve({})])('restless', async input => {

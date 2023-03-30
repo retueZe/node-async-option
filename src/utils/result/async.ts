@@ -1,6 +1,6 @@
 import { AsyncSuccess, Async, AsyncResult, AsyncFailure } from '../../async'
 import { Result, Success, Failure, Option, Some, NONE } from '../..'
-import { isPromise } from 'node:util/types'
+import { isPromise } from '../async'
 
 /** @since v2.0.0 */
 export type AsyncResultMap<T, E = unknown> = {
