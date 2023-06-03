@@ -1,11 +1,11 @@
-import { Option, NONE, Some } from '..'
+import { Failure, Result, Success } from '..'
 import { LoopResult, normalizeLoopResult, normalizeVoidResult, VoidResult } from './abstraction'
 
 /** @since v2.0.0 */
-export function array<T>(length: number | null, callback: (index: number) => LoopResult<T>): Option<T[]>
+export function array<T>(length: number | null, callback: (index: number) => LoopResult<T>): Result<T[], number>
 /** @since v2.0.0 */
-export function array<T>(callback: (index: number) => LoopResult<T>): Option<T[]>
-export function array<T>(): Option<T[]> {
+export function array<T>(callback: (index: number) => LoopResult<T>): Result<T[], number>
+export function array<T>(): Result<T[], number> {
     const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
         ? arguments[0]
         : null
@@ -31,13 +31,13 @@ export function array<T>(): Option<T[]> {
             array[i] = result.value
     }
 
-    return isAborted ? NONE : new Some(array)
+    return isAborted ? new Failure(array.length) : new Success(array)
 }
 /** @since v2.0.0 */
 export function forEach<T>(
     items: Iterable<T>,
     callback: (item: T, index: number) => VoidResult
-): Option<number> {
+): Result<number, number> {
     let index = 0
     let isAborted = false
 
@@ -51,14 +51,14 @@ export function forEach<T>(
         }
     }
 
-    return isAborted ? NONE : new Some(index)
+    return isAborted ? new Failure(index) : new Success(index)
 }
 /** @since v2.0.0 */
 export function map<T, U>(
     source: Iterable<T>,
     mapper: (item: T, index: number) => LoopResult<U>
-): Option<U[]> {
-    return new Some<U[]>([])
+): Result<U[], number> {
+    return new Success<U[]>([])
         .bind(mapped => forEach(source, (item, index): VoidResult => {
             const iterationResult = normalizeLoopResult(mapper(item, index))
 

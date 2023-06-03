@@ -1,5 +1,5 @@
-import { NONE, Result, Some } from '..'
-import { Async, AsyncOption, ASYNC_NONE, AsyncSome } from '../async'
+import { Failure, Result, Success } from '..'
+import { Async, AsyncFailure, AsyncResult, AsyncSuccess } from '../async'
 import { then, isPromise } from '../utils/async'
 import { InterruptSignal, LoopResult, normalizeLoopResult, normalizeVoidResult, VoidResult } from './abstraction'
 import { ABORT } from './signals'
@@ -8,10 +8,10 @@ import { ABORT } from './signals'
 export function arrayAsync<T>(
     length: number | null,
     callback: (index: number) => Async<LoopResult<T>>
-): AsyncOption<T[]>
+): AsyncResult<T[], number>
 /** @since v2.5.0 */
-export function arrayAsync<T>(callback: (index: number) => Async<LoopResult<T>>): AsyncOption<T[]>
-export function arrayAsync<T>(): AsyncOption<T[]> {
+export function arrayAsync<T>(callback: (index: number) => Async<LoopResult<T>>): AsyncResult<T[], number>
+export function arrayAsync<T>(): AsyncResult<T[], number> {
     const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
         ? arguments[0]
         : null
@@ -63,18 +63,18 @@ export function arrayAsync<T>(): AsyncOption<T[]> {
     }
 
     if (promises.length < 0.5) return isAborted
-        ? ASYNC_NONE
-        : new AsyncSome(results.map(result => result.value))
+        ? new AsyncFailure(results.length)
+        : new AsyncSuccess(results.map(result => result.value))
 
-    return new AsyncOption(Promise.all(promises).then(() => isAborted
-        ? NONE
-        : new Some(results.map(result => result.value))))
+    return new AsyncResult(Promise.all(promises).then(() => isAborted
+        ? new Failure(results.length)
+        : new Success(results.map(result => result.value))))
 }
 /** @since v2.5.0 */
 export function forEachAsync<T>(
     items: Iterable<T>,
     callback: (item: T, index: number) => Async<VoidResult>
-): AsyncOption<number> {
+): AsyncResult<number, number> {
     const iterator = items[Symbol.iterator]()
     let i = 0
     const promises: Promise<void>[] = []
@@ -113,19 +113,19 @@ export function forEachAsync<T>(
     }
 
     if (promises.length < 0.5) return isAborted
-        ? ASYNC_NONE
-        : new AsyncSome(i)
+        ? new AsyncFailure(i)
+        : new AsyncSuccess(i)
 
-    return new AsyncOption(Promise.all(promises).then(() => isAborted
-        ? NONE
-        : new Some(i)))
+    return new AsyncResult(Promise.all(promises).then(() => isAborted
+        ? new Failure(i)
+        : new Success(i)))
 }
 /** @since v2.5.0 */
 export function mapAsync<T, U>(
     source: Iterable<T>,
     mapper: (item: T, index: number) => Async<LoopResult<U>>
-): AsyncOption<U[]> {
-    return new AsyncSome<U[]>([])
+): AsyncResult<U[], number> {
+    return new AsyncSuccess<U[], number>([])
         .bind(mappedArray => forEachAsync(source, (item, index): Async<VoidResult> =>
             then(mapper(item, index), mapped => {
                 const iterationResult = normalizeLoopResult(mapped)
@@ -135,6 +135,6 @@ export function mapAsync<T, U>(
                 mappedArray.push(iterationResult.value)
 
                 return
-            })).onSome(iterationCount => mappedArray.length = iterationCount)
+            })).onSuccess(iterationCount => mappedArray.length = iterationCount)
             .map(() => mappedArray))
 }
