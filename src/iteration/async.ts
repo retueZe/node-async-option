@@ -4,12 +4,18 @@ import { then, isPromise } from '../utils/async'
 import { InterruptSignal, LoopResult, normalizeLoopResult, normalizeVoidResult, VoidResult } from './abstraction'
 import { ABORT } from './signals'
 
-/** @since v2.5.0 */
+/**
+ * Executes all the callbacks, if there was sync only, acts like sync version. Otherwise waits for all the promises. If some of promises returned an interrupt signal, then the iteration count will point to the lowest index of the promise returned the signal. In short, the async behavior is the same as if all the promises were replaced with their precomputed resolved values.
+ * @since v2.5.0
+ */
 export function arrayAsync<T>(
     length: number | null,
     callback: (index: number) => Async<LoopResult<T>>
 ): AsyncResult<T[], number>
-/** @since v2.5.0 */
+/**
+ * @see {@link arrayAsync}
+ * @since v2.5.0
+ */
 export function arrayAsync<T>(callback: (index: number) => Async<LoopResult<T>>): AsyncResult<T[], number>
 export function arrayAsync<T>(): AsyncResult<T[], number> {
     const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
@@ -70,7 +76,10 @@ export function arrayAsync<T>(): AsyncResult<T[], number> {
         ? new Failure(results.length)
         : new Success(results.map(result => result.value))))
 }
-/** @since v2.5.0 */
+/**
+ * @see {@link arrayAsync}
+ * @since v2.5.0
+ */
 export function forEachAsync<T>(
     items: Iterable<T>,
     callback: (item: T, index: number) => Async<VoidResult>
@@ -120,7 +129,10 @@ export function forEachAsync<T>(
         ? new Failure(i)
         : new Success(i)))
 }
-/** @since v2.5.0 */
+/**
+ * @see {@link arrayAsync}
+ * @since v2.5.0
+ */
 export function mapAsync<T, U>(
     source: Iterable<T>,
     mapper: (item: T, index: number) => Async<LoopResult<U>>
