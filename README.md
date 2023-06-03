@@ -77,7 +77,10 @@ Option.some(input)
     // `OptionUtils.all` is bad here, because we parse all lines at once,
     // and after all we do check whether they are valid or not. All functions
     // inside the `Iteration` namespace checks result after each iteration.
-    .bind(lines => map(lines, parseHeader))
+    // These functions returns results, and their errors indicate the index of
+    // the item that stopped the exection, i.e. iteration count. So, we need
+    // to map it to option.
+    .bind(lines => map(lines, parseHeader).toOption())
     .onBoth(console.log)
 ```
 
@@ -91,13 +94,14 @@ const pairs = [['a', 123], ['b', 'string'], ['c', true]]
 
 // creating an object from the key-value pair array
 new Some(pairs)
-    .bind(pairs => new Some({})
+    .bind(pairs => new Success({})
         .bind(object => forEach(pairs, ([key, value]) => {
             object[key] = value
         }))
         // `forEach` returns iteration count. So, we need to map it.
         // you can also return values such as 'break' or 'abort' to interrupt
         // the loop (see JSDoc)
+        .toOption()
         .map(() => object))
     .onBoth(console.log)
 ```
