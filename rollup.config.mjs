@@ -2,6 +2,20 @@ import typescript from '@rollup/plugin-typescript'
 import terser from '@rollup/plugin-terser'
 import dts from 'rollup-plugin-dts'
 import * as path from 'node:path'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+
+const PACKAGE_NAME = 'async-option'
+const PACKAGE_JSON_IN = readFileSync('shared/package.json.in', {encoding: 'utf-8'})
+const NAMESPACES = [
+    'async',
+    'iteration',
+    'iteration/signals',
+    'parsers',
+    'utils',
+    'utils/async',
+    'utils/option',
+    'utils/result'
+]
 
 function createEntryFileNames(extension) {
     extension ??= '.js'
@@ -35,17 +49,29 @@ function applyDefaultConfig(config) {
         ...config,
         input: createInput([
             '',
-            'async',
-            'iteration',
-            'iteration/signals',
-            'parsers',
-            'utils',
-            'utils/async',
-            'utils/option',
-            'utils/result'
+            ...NAMESPACES
         ])
     }
 }
+function insertVariable(content, variableName, value) {
+    return content.replaceAll(`<(${variableName})`, value)
+}
+function createNamespace(namespacePath) {
+    let package_json = PACKAGE_JSON_IN
+    const variables = {
+        NSPATH: namespacePath,
+        PKGNAME: PACKAGE_NAME,
+        INSTALLDIR: Array.from(namespacePath.split('/'), () => '..').join('/')
+    }
+
+    for (const variableName in variables)
+        package_json = insertVariable(package_json, variableName, variables[variableName])
+
+    mkdirSync(namespacePath, {recursive: true})
+    writeFileSync(`${namespacePath}/package.json`, package_json, {encoding: 'utf-8'})
+}
+
+NAMESPACES.forEach(createNamespace)
 
 /** @type {import('rollup').RollupOptions[]} */
 const config = [

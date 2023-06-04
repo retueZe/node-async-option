@@ -76,11 +76,14 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "build": "npm run lint && node scripts/build.mjs",
+    "build:dev": "tsc --outDir dist --module commonjs --inlineSourceMap",
+    "build:prod": "npm run lint && rollup -c",
+    "build:test": "tsc -p tsconfig.test.json --outDir dist --module commonjs --inlineSourceMap",
+    "clean": "rm -rf dist coverage async iteration parsers utils",
     "test": "jest",
-    "pretest": "node scripts/build.mjs -c test",
-    "prepare": "npm run lint && node scripts/build.mjs -c prod",
-    "postpublish": "node scripts/build-cleanup.mjs"
+    "pretest": "npm run build:test",
+    "prepare": "npm run clean && npm run build:prod",
+    "postpublish": "npm run clean"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.0",
