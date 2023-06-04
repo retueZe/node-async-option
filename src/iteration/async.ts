@@ -1,13 +1,9 @@
 import { Failure, Result, Success } from '..'
-import { Async, AsyncFailure, AsyncResult, AsyncSuccess } from '../async'
+import { Async, AsyncResult, AsyncSuccess } from '../async'
 import { then, isPromise } from '../utils/async'
-import { InterruptSignal, LoopResult, normalizeLoopResult, normalizeVoidResult, VoidResult } from './abstraction'
-import { ABORT } from './signals'
+import { LoopResult, normalizeLoopResult, normalizeVoidResult, VoidResult } from './abstraction'
 
-/**
- * Executes all the callbacks, if there was sync only, acts like sync version. Otherwise waits for all the promises. If some of promises returned an interrupt signal, then the iteration count will point to the lowest index of the promise returned the signal. In short, the async behavior is the same as if all the promises were replaced with their precomputed resolved values.
- * @since v2.5.0
- */
+/** @since v2.5.0 */
 export function arrayAsync<T>(
     length: number | null,
     callback: (index: number) => Async<LoopResult<T>>
@@ -18,123 +14,18 @@ export function arrayAsync<T>(
  */
 export function arrayAsync<T>(callback: (index: number) => Async<LoopResult<T>>): AsyncResult<T[], number>
 export function arrayAsync<T>(): AsyncResult<T[], number> {
-    const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
-        ? arguments[0]
-        : null
-    const callback: (index: number) => Async<LoopResult<T>> = typeof arguments[1] === 'undefined'
-        ? arguments[0]
-        : arguments[1]
-    const results = length === null ? [] : new Array<Result<T, InterruptSignal>>(length)
-    const promises: Promise<void>[] = []
-    let isAborted = false
-
-    for (let i = 0; length === null || i < length; i++) {
-        const result = callback(i)
-        let toPush: Result<T, InterruptSignal>
-
-        if (isPromise(result)) {
-            toPush = ABORT
-            promises.push(result.then((function(index: number, result: LoopResult<T>): void {
-                if (results.length - 0.5 < index) return
-
-                const normalized = normalizeLoopResult(result)
-
-                if (!normalized.isSucceeded) {
-                    isAborted = normalized.error === 'abort'
-
-                    results.length = index
-
-                    return
-                }
-
-                results[index] = normalized
-            }).bind(undefined, i)))
-        } else {
-            const normalized = normalizeLoopResult(result)
-
-            if (!normalized.isSucceeded) {
-                isAborted = normalized.error === 'abort'
-
-                if (length !== null) results.length = i
-
-                break
-            }
-
-            toPush = normalized
-        }
-        if (length === null)
-            results.push(toPush)
-        else
-            results[i] = toPush
-    }
-
-    if (promises.length < 0.5) return isAborted
-        ? new AsyncFailure(results.length)
-        : new AsyncSuccess(results.map(result => result.value))
-
-    return new AsyncResult(Promise.all(promises).then(() => isAborted
-        ? new Failure(results.length)
-        : new Success(results.map(result => result.value))))
+    return new AsyncResult(arrayAsyncImpl(arguments))
 }
-/**
- * @see {@link arrayAsync}
- * @since v2.5.0
- */
+/** @since v2.5.0 */
 export function forEachAsync<T>(
-    items: Iterable<T>,
+    items: AsyncIterable<T>,
     callback: (item: T, index: number) => Async<VoidResult>
 ): AsyncResult<number, number> {
-    const iterator = items[Symbol.iterator]()
-    let i = 0
-    const promises: Promise<void>[] = []
-    let isAborted = false
-
-    for (;; i++) {
-        const iteratorResult = iterator.next()
-
-        if (iteratorResult.done ?? false) break
-
-        const result = callback(iteratorResult.value, i)
-
-        if (isPromise(result)) {
-            promises.push(result.then((function(index: number, result: VoidResult): void {
-                if (i - 0.5 < index) return
-
-                const normalized = normalizeVoidResult(result)
-
-                if (normalized !== 'continue') {
-                    isAborted = normalized === 'abort'
-
-                    i = index
-
-                    return
-                }
-            }).bind(undefined, i)))
-        } else {
-            const normalized = normalizeVoidResult(result)
-
-            if (normalized !== 'continue') {
-                isAborted = normalized === 'abort'
-
-                break
-            }
-        }
-    }
-
-    if (promises.length < 0.5) return isAborted
-        ? new AsyncFailure(i)
-        : new AsyncSuccess(i)
-
-    return new AsyncResult(Promise.all(promises).then(() => isAborted
-        ? new Failure(i)
-        : new Success(i)))
+    return new AsyncResult(forEachAsyncImpl(items, callback))
 }
-/**
- * @see {@link arrayAsync}
- * @since v2.5.0
- */
+/** @since v2.5.0 */
 export function mapAsync<T, U>(
-    source: Iterable<T>,
+    source: AsyncIterable<T>,
     mapper: (item: T, index: number) => Async<LoopResult<U>>
 ): AsyncResult<U[], number> {
     return new AsyncSuccess<U[], number>([])
@@ -149,4 +40,54 @@ export function mapAsync<T, U>(
                 return
             })).onSuccess(iterationCount => mappedArray.length = iterationCount)
             .map(() => mappedArray))
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function arrayAsyncImpl<T>(...args: any): Promise<Result<T[], number>> {
+    const length: number | null = typeof arguments[0] === 'number' || arguments[0] === null
+        ? arguments[0]
+        : null
+    const callback: (index: number) => Async<LoopResult<T>> = typeof arguments[1] === 'undefined'
+        ? arguments[0]
+        : arguments[1]
+    const array = length === null ? [] : new Array<T>(length)
+
+    for (let i = 0; length === null || i < length; i++) {
+        const result = callback(i)
+        const item = normalizeLoopResult(isPromise(result) ? await result : result)
+
+        if (!item.isSucceeded) {
+            if (item.error === 'abort') return new Failure(i)
+            if (length !== null) array.length = i
+
+            break
+        }
+        if (length === null)
+            array.push(item.value)
+        else
+            array[i] = item.value
+    }
+
+    return new Success(array)
+}
+async function forEachAsyncImpl<T>(
+    items: AsyncIterable<T>,
+    callback: (item: T, index: number) => Async<VoidResult>
+): Promise<Result<number, number>> {
+    let i = 0
+
+    for await (const item of items) {
+        const callbackResult = callback(item, i)
+        const result = normalizeVoidResult(isPromise(callbackResult) ? await callbackResult : callbackResult)
+
+        if (result !== 'continue') {
+            if (result === 'abort') return new Failure(i)
+
+            break
+        }
+
+        i++
+    }
+
+    return new Success(i)
 }
