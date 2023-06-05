@@ -15,6 +15,7 @@
     "type": "git",
     "url": "https://github.com/retueZe/node-async-option"
   },
+  "author": "retueZe",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
